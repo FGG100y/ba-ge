@@ -1,10 +1,11 @@
 [build-system]
 requires = [
     "setuptools>=42",
+    "wheel",
+    "cython",
     ]
-requires = ["setuptools", "wheel", "cython"]
 build-backend = "setuptools.build_meta"
 
 [tool.black]
-line-length = 80
+line-length = 79
 target-version = ["py310", "py311"]

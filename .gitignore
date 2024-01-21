@@ -167,8 +167,13 @@ cython_debug/
 
 # ignore all folder named 'images'
 images/
+tmp/
 # not when it appears in subdir
 /data
 
 # ignore all folder named 'flagged'
 flagged/
+
+# jupyter notebooks
+notebooks/
+*.ipynb

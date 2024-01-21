@@ -1,78 +1,57 @@
-import sys
+from gamgin import listen_microphone as stt_model
+from gamgin.wake_detection import wakeBot
+from gamgin import llm_model, tts_model
 
-import torch
-from transformers import pipeline
-from transformers.pipelines.audio_utils import ffmpeg_microphone_live
-
-device = "cuda:0" if torch.cuda.is_available() else "cpu"
-localmodel = "/home/ds01/hfLLMs/ast-finetuned-speech-commands-v2"
-
-classifier = pipeline(
-    "audio-classification", model=localmodel, device=device
-)
-
-
-def launch_fn(
-    wake_word="marvin",
-    prob_threshold=0.5,
-    chunk_length_s=2.0,
-    stream_chunk_s=0.25,
-    debug=False,
-):
-    if wake_word not in classifier.model.config.label2id.keys():
-        if debug:
-            print(classifier.model.config.id2label)
-
-        raise ValueError(
-            f"Wake word {wake_word} not in set of valid class labels, pick a wake word in the set {classifier.model.config.label2id.keys()}."
+init = 1
+while True:
+    # PART01: wake word detection
+    if (init and wakeBot().launch_fn(wake_word="marvin", debug=True)):
+        # responding the calling:
+        tts_model.speak_out_loud(
+            itext="I'm here at your service.",
+            sr=24000,
+            language="en",
+            save_wav=False,
         )
 
-    sampling_rate = classifier.feature_extractor.sampling_rate
+    #  while True:
+    #      # PART02: speek2text, input and transcribe
+    #      text = stt_model.transcribe(duration=10)
+    #      #  text = stt_model.transcribe(  # NOT work well
+    #      #      chunk_length_s=5.0, stream_chunk_s=1.0, max_new_tokens=28
+    #      #  )
+    #      print("If Whisper thinks not correct, say 'backward' to do it again, say 'foreward' to proceed.")  # noqa
+    #      if wakeBot().listening(debug=True) == "backward":
+    #          continue
+    #      print("If Whisper thinks correct, say 'forward' to proceed")
+    #      if wakeBot(prob_threshold=0.8).listening() == "foreward":
+    #          break
+    text = stt_model.transcribe(duration=10)
 
-    mic = ffmpeg_microphone_live(
-        sampling_rate=sampling_rate,
-        chunk_length_s=chunk_length_s,
-        stream_chunk_s=stream_chunk_s,
+    # PART03: query the LLMs
+    #  query = "Hello, how are you today?" if text is None else text
+    llm_response = llm_model.query_llm(query=text, verbose=True)
+
+    # PART04: TTS using coqui-tts/xtts-v2
+    tts_model.speak_out_loud(
+        itext=llm_response,
+        sr=24000,
+        language="zh-cn",
+        save_wav=False,
     )
-
-    print("Listening for wake word...")
-    for prediction in classifier(mic):
-        prediction = prediction[0]
-        if debug:
-            print(prediction)
-        if prediction["label"] == wake_word:
-            if prediction["score"] > prob_threshold:
-                if debug:
-                    print(f"{wake_word} here at your service ...")
-                return True
-
-
-launch_fn(debug=True)
-
-
-def transcribe(chunk_length_s=5.0, stream_chunk_s=1.0):
-    sampling_rate = transcriber.feature_extractor.sampling_rate
-
-    mic = ffmpeg_microphone_live(
-        sampling_rate=sampling_rate,
-        chunk_length_s=chunk_length_s,
-        stream_chunk_s=stream_chunk_s,
+    tts_model.speak_out_loud(
+        itext="Would you like to go on?",
+        sr=24000,
+        language="en",
+        save_wav=False,
     )
-
-    print("Start speaking...")
-    for item in transcriber(mic, generate_kwargs={"max_new_tokens": 128}):
-        sys.stdout.write("\033[K")
-        print(item["text"], end="\r")
-        if not item["partial"][0]:
-            break
-
-    return item["text"]
-
-
-localmodel = "/home/ds01/hfLLMs/whisper-large-v3"
-transcriber = pipeline(
-    "automatic-speech-recognition", model=localmodel, device=device
-)
-
-
-transcribe()
+    if wakeBot().listening() == "yes":
+        init = 0
+    else:
+        tts_model.speak_out_loud(
+            itext="Okay, see you.",
+            sr=24000,
+            language="en",
+            save_wav=False,
+        )
+        break
