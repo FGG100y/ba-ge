@@ -1,0 +1,9 @@
+# With Setuptools, one of the most straighforward approches to including
+# non-Python files is using the MANIFEST.in file
+
+# The `graft` directive accepts a directory name.
+# All files in the directory and its child directories are included.
+# NOTE that `recursive-exclude` directive explicitly excluding files.
+
+graft src
+recursive-exclude __pycache__ py[cod]

@@ -99,27 +99,27 @@ run_app:
 .PHONY: wakeup
 ## Wake the bot up
 wakeup:
-	$(PYTHON) ./gamgin/wake_detection.py
+	$(PYTHON) ./src/wake_detection.py
 
 .PHONY: query_LLM
 ## Query the LLM
 query_LLM:
-	$(PYTHON) ./gamgin/llm_model.py
+	$(PYTHON) ./src/llm_model.py
 
 .PHONY: stt_whisper_sr
 ## STT using whisper (speech_recognition)
 stt_whisper_sr:
-	$(PYTHON) ./gamgin/listen_microphone.py
+	$(PYTHON) ./src/listen_microphone.py
 
 .PHONY: stt_whisper_hf
 ## STT using whisper (huggingface model)
 stt_whisper_hf:
-	$(PYTHON) ./gamgin/stt_model.py
+	$(PYTHON) ./src/stt_model.py
 
 .PHONY: stt_whisper_webui
 ## STT using whisper on webui
 stt_whisper_webui:
-	$(PYTHON) ./gamgin/stream_webrtc_stt_whisper.py
+	$(PYTHON) ./src/stream_webrtc_stt_whisper.py
 
 
 # 数据库访问密码的加密；

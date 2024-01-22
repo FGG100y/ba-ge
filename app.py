@@ -1,6 +1,6 @@
-from gamgin import listen_microphone as stt_model
-from gamgin.wake_detection import wakeBot
-from gamgin import llm_model, tts_model
+from src import listen_microphone as stt_model
+from src.wake_detection import wakeBot
+from src import llm_model, tts_model
 
 init = 1
 while True:
