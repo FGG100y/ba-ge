@@ -31,15 +31,23 @@ backend.
 #  )
 """
 
+from Cython.Build import cythonize
 from setuptools import Extension, setup
+
+ext_modules = [
+    Extension(
+        name="cythonpkg.harmonic_mean",
+        sources=["src/cythonpkg/harmonic_mean.pyx"],
+    ),
+    #  Extension(
+    #      name="cythonpkg.mymodule",
+    #      sources=["src/cythonpkg/cython_module.pyx"],
+    #  )
+]
 
 # NOTE with one million inputs, the harmonic_mean calcaulation in Python
 # might take some time, it's good time to get help from Cython:
 setup(
-    ext_modules=[
-        Extension(
-            name="cythonpkg.harmonic_mean",
-            sources=["src/cythonpkg/harmonic_mean.pyx"],
-        ),
-    ]
+    name="gamgin",
+    ext_modules=cythonize(ext_modules),
 )

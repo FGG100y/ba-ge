@@ -1,8 +1,8 @@
 ##############################################################################
 # GLOBALS 全局变量                                                           #
 ##############################################################################
-# 替代 'pip install -e .'
-export PYTHONPATH = $(PWD)
+# src/ layout: 替代 'pip install -e .'
+export PYTHONPATH = $(PWD)/src/
 
 # 进入 pdb 使用 ipython 环境:
 export PYTHONBREAKPOINT = IPython.core.debugger.set_trace
@@ -96,6 +96,11 @@ project_info:
 run_app:
 	$(PYTHON) ./app.py
 
+.PHONY: harmony
+## Check src/ layout for importing module (temporary check of the scaffold)
+harmony:
+	$(PYTHON) ./src/cythonpkg/harmony.py
+
 .PHONY: wakeup
 ## Wake the bot up
 wakeup:
@@ -111,15 +116,15 @@ query_LLM:
 stt_whisper_sr:
 	$(PYTHON) ./src/listen_microphone.py
 
-.PHONY: stt_whisper_hf
-## STT using whisper (huggingface model)
-stt_whisper_hf:
-	$(PYTHON) ./src/stt_model.py
+.PHONY: tts_coqui
+## TTS using coqui_xtts-v2 (huggingface model)
+tts_coqui:
+	$(PYTHON) ./src/tts_model.py
 
 .PHONY: stt_whisper_webui
 ## STT using whisper on webui
 stt_whisper_webui:
-	$(PYTHON) ./src/stream_webrtc_stt_whisper.py
+	streamlit run ./src/stream_webrtc_stt_whisper.py
 
 
 # 数据库访问密码的加密；
@@ -214,37 +219,52 @@ stt_whisper_webui:
 #   例如：当前存在一个命名为 clean 的文件, make 照样运行这个任务
 # =============================================================
 
+.PHONY: clean
+## Delete all compiled Python files
+clean:
+	rm -f -r build/
+	find . -type f -name "*.so" -delete
+	find . -type f -name "*.py[co]" -delete
+
+clean-cpp:
+	find . -type f -name "*.c" -delete
+	find . -type f -name "*.cpp" -delete
+
+.PHONY: build
+build: clean
+	python setup.py build_ext --inplace
+
+.PHONY: cython-build
+cython-build: clean clean-cpp
+	python setup.py build_ext --inplace --use-cython
+
+
 .PHONY: freeze
 ## Generate project's requirements file
 freeze:
 	$(PYTHON) -m pip freeze | grep -v "pkg-resources" > requirements.txt
 
-.PHONY: clean
-## Delete all compiled Python files
-clean:
-	find . -type f -name "*.py[co]" -delete
-	find . -type d -name "__pycache__" -delete
-
-.PHONY: cleanall
+# find . -type d -name "__pycache__" -delete
+.PHONY: clean-all
 ## Delete all compiled Python files and remove venv
-cleanall:
+clean-all: clean clean-cpp
 	find . -type d -name "__pycache__" | xargs rm -rf {};
 	rm -rf $(VENV) .coverage .mypy_cache
 
 .PHONY: lint
 ## Lint using flake8
 lint:
-	$(VENV)/bin/flake8 --ignore=W503,E501 ./src/
+	flake8 --ignore=W503,E501 ./src/
 
 .PHONY: test
-## Test using pytest (NOTE not implemented yet)
-test: $(INSTALL_STAMP)
-	$(PYTHON) -m pytest ./tests/
+## Test using pytest
+test:
+	$(PYTHON) -m pytest
 
-.PHONY: ipynb2html
-## Turn .ipynb file to html-with-toc
-ipynb2html:
-	$(VENV)/bin/jupyter nbconvert notebook_*.ipynb --template toc2 --CodeFoldingPreprocessor.remove_folded_code=True
+# .PHONY: ipynb2html
+# ## Turn .ipynb file to html-with-toc
+# ipynb2html:
+#     $(VENV)/bin/jupyter nbconvert notebook_*.ipynb --template toc2 --CodeFoldingPreprocessor.remove_folded_code=True
 
 ##############################################################################
 # Self Documenting Commands                                                  #

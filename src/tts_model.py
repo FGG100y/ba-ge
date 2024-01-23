@@ -50,3 +50,8 @@ def speak_out_loud(
     # simpleaudio to speak out loud
     play_obj = simpleaudio.play_buffer(audio.data, 1, 2, sr)
     play_obj.wait_done()
+
+
+if __name__ == "__main__":
+
+    speak_out_loud(itext=input_text)

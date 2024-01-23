@@ -1,10 +1,12 @@
 import sys
+
 from termcolor import colored
+
 from cythonpkg.harmonic_mean import harmonic_mean
 
 
-def main() -> None:
-    nums = _parse_nums(sys.argv[1:])
+def main(args=sys.argv[1:]) -> None:
+    nums = _parse_nums(args)
     result = _calculate_results(nums)
     print(_format_output(result))
 
@@ -29,4 +31,9 @@ def _calculate_results(nums: list[float]) -> float:
 
 
 def _format_output(result: float) -> str:
-    return colored(str(result), "black", "on_cyan", attrs=["bold"])
+    return colored(str(result), "red", "on_black", attrs=["bold"])
+
+
+if __name__ == "__main__":
+    args = [0.65, 0.7]
+    main(args)

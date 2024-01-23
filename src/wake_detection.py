@@ -64,7 +64,8 @@ if __name__ == "__main__":
     # 'marvin', 'nine', 'no', 'off', 'on', 'one', 'right', 'seven', 'sheila',
     # 'six', 'stop', 'three', 'tree', 'two', 'up', 'visual', 'wow', 'yes',
     # 'zero']
-    if bot.listening(debug=True) == "backward":
+    wake_word = "backward"
+    if bot.listening(debug=True) == wake_word:
         print("Yes, I will follow the instruction.")
     else:
         print("you are too late")

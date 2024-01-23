@@ -9,3 +9,10 @@ build-backend = "setuptools.build_meta"
 [tool.black]
 line-length = 79
 target-version = ["py310", "py311"]
+
+
+# src/ layout for pytest import error:
+[tool.pytest.ini_options]
+pythonpath = [
+  "src"
+]
