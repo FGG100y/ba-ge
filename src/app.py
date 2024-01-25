@@ -1,6 +1,7 @@
-from src import listen_microphone as stt_model
-from src.wake_detection import wakeBot
-from src import llm_model, tts_model
+from audio import listen_microphone as stt_model
+from audio import tts_model
+from nlp import llm_model
+from wake_word.wake_detection import wakeBot
 
 init = 1
 while True:
