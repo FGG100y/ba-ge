@@ -1,3 +1,5 @@
+"""TTS using coqui_xtts-v2 as base model
+"""
 import simpleaudio
 import torch
 from IPython.display import Audio

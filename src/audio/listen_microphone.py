@@ -1,5 +1,6 @@
-import speech_recognition as sr
 import pyttsx3
+import speech_recognition as sr
+
 #  import whisper
 
 
@@ -9,8 +10,7 @@ engine = pyttsx3.init()
 
 # speech_recognition using `whisper` (which load .cache/whisper/model.pt)
 def transcribe(language="chinese", duration=5):
-    """fixed interval stt
-    """
+    """fixed interval stt"""
     # obtain audio from the microphone
     r = sr.Recognizer()
     with sr.Microphone() as source:
@@ -47,7 +47,9 @@ def listen_and_respond(prompt, language="zh-cn"):
             try:
                 # Listen for user input and transcribe it
                 audio = r.listen(source)
-                text = r.recognize_whisper(audio, model="large", language=language)
+                text = r.recognize_whisper(
+                    audio, model="large", language=language
+                )
                 break
             except sr.WaitTimeoutError:
                 print("Timed out waiting for user input.")
@@ -69,7 +71,6 @@ def listen_and_respond(prompt, language="zh-cn"):
 
 
 if __name__ == "__main__":
-
     # Example usage
     listen_and_respond("Are you ready to begin? Say yes or no.")
 
@@ -80,5 +81,3 @@ if __name__ == "__main__":
     #      print("Say something!")
     #      # read the audio data from the default microphone
     #      audio_data = recognizer.record(source, duration=5)
-
-

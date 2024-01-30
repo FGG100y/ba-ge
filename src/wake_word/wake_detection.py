@@ -1,11 +1,40 @@
 import torch
 from transformers import pipeline
 from transformers.pipelines.audio_utils import ffmpeg_microphone_live
+#  from transformers import Wav2Vec2ForPreTraining
+
+
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 localmodel = "/home/ds01/hfLLMs/ast-finetuned-speech-commands-v2"
 
 classifier = pipeline("audio-classification", model=localmodel, device=device)
+
+
+
+def tmpfunc():
+    # Initialize the ffmpeg_microphone_live function with the desired parameters
+    input_stream = pipeline.ffmpeg_microphone_live(device_index=0, sample_rate=16000, num_channels=1)
+
+    # Set the batch size to 4
+    batch_size = 4
+
+    while True:
+        # Read chunks of audio input from the microphone and store them in a list
+        audio_chunks = []
+        for i in range(batch_size):
+            chunk = next(input_stream).numpy()
+            audio_chunks.append(chunk)
+
+        # Concatenate the chunks into a single array
+        audio_array = np.concatenate(audio_chunks)
+
+        # Process the audio array using the pipeline
+        result = pipeline(audio_array)[0]
+
+        # Do something with the result, such as print it to the console
+        print(result)
+
 
 
 class wakeBot:
