@@ -1,8 +1,11 @@
 """TTS using coqui_xtts-v2 as base model
 """
+import tempfile
 import simpleaudio
 import torch
+from gtts import gTTS  # text to speech via google
 from IPython.display import Audio
+from pygame import mixer
 from TTS.tts.configs.xtts_config import XttsConfig
 from TTS.tts.models.xtts import Xtts
 
@@ -54,6 +57,15 @@ def speak_out_loud(
     play_obj.wait_done()
 
 
-if __name__ == "__main__":
+def speeker(texts, lang="zh-cn"):
+    mixer.init()  # pygame mixer as audio player
+    with tempfile.NamedTemporaryFile(delete=True) as fp:
+        tts = gTTS(text=texts, lang=lang)
+        tts.save("{}.mp3".format(fp.name))
+        mixer.music.load("{}.mp3".format(fp.name))
+        mixer.music.play()
+    print(texts)
 
+
+if __name__ == "__main__":
     speak_out_loud(itext=input_text)

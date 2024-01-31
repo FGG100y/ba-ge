@@ -2,12 +2,13 @@ import openai
 from audio import listen_microphone as stt_model
 from audio import tts_model
 from nlp import llm_model
-from wake_word.wake_detection import wakeBot
+#  from wake_word.wake_detection import wakeBot
 from wake_word.wake_gamgin_stream import wake_gamgin
 
 init = 1
+goodbyes = ["bye", "再见", ]
 while True:
-    # PART01: wake word detection  # FIXME update using custom wake-word
+    # PART01: wake word detection
     if (init and wake_gamgin()):
         # responding the calling:
         tts_model.speak_out_loud(
@@ -16,19 +17,9 @@ while True:
             language="zh-cn",
             save_wav=False,
         )
+        init = 0
 
-    #  while True:
-    #      # PART02: speech2text, input and transcribe
-    #      text = stt_model.transcribe(duration=10)
-    #      #  text = stt_model.transcribe(  # NOT work well
-    #      #      chunk_length_s=5.0, stream_chunk_s=1.0, max_new_tokens=28
-    #      #  )
-    #      print("If Whisper thinks not correct, say 'backward' to do it again, say 'foreward' to proceed.")  # noqa
-    #      if wakeBot().listening(debug=True) == "backward":
-    #          continue
-    #      print("If Whisper thinks correct, say 'forward' to proceed")
-    #      if wakeBot(prob_threshold=0.8).listening() == "foreward":
-    #          break
+    # PART02: speech2text (whisper-large), input and transcribe
     text = stt_model.transcribe(duration=5)
 
     # PART03: query the LLMs
@@ -45,15 +36,11 @@ while True:
         language="zh-cn",
         save_wav=False,
     )
-    tts_model.speak_out_loud(
-        itext="请问是否继续对话？",
-        sr=24000,
-        language="zh-cn",
-        save_wav=False,
-    )
-    if wakeBot(prob_threshold=0.8).listening() == "yes":
-        init = 0
-    else:
+
+    # PART05: say goodbye
+    goodbyes = ["bye", "再见", ]
+    say_goodbye = [w for w in goodbyes if w in llm_response]
+    if len(say_goodbye) > 0:
         tts_model.speak_out_loud(
             itext="拜了个拜, 回见.",
             sr=24000,
