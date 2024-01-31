@@ -1,11 +1,24 @@
-import pyttsx3
+#  import pyttsx3
 import speech_recognition as sr
 
 #  import whisper
+import platform
 
+# Get rid of ALSA lib error messages in Linux
+if platform.system() == "Linux":
+    from ctypes import CFUNCTYPE, c_char_p, c_int, cdll
 
-# Initialize the recognizer and text-to-speech engines
-engine = pyttsx3.init()
+    # Define error handler
+    error_handler = CFUNCTYPE(None, c_char_p, c_int, c_char_p, c_int, c_char_p)
+
+    # Don't do anything if there is an error message
+    def py_error_handler(filename, line, function, err, fmt):
+        pass
+
+    # Pass to C
+    c_error_handler = error_handler(py_error_handler)
+    asound = cdll.LoadLibrary("libasound.so")
+    asound.snd_lib_error_set_handler(c_error_handler)
 
 
 # speech_recognition using `whisper` (which load .cache/whisper/model.pt)
@@ -14,6 +27,7 @@ def transcribe(language="chinese", duration=5):
     # obtain audio from the microphone
     r = sr.Recognizer()
     with sr.Microphone() as source:
+        r.adjust_for_ambient_noise(source)
         print("I'm whisper, I'm listening, say something:")
         audio = r.listen(source, phrase_time_limit=duration)
 
@@ -31,11 +45,6 @@ def transcribe(language="chinese", duration=5):
 
 def listen_and_respond(prompt, language="zh-cn"):
     """Listen for user input, transcribe it, and respond accordingly."""
-
-    # Prepare the text-to-speech prompt
-    engine.say(prompt)
-    engine.runAndWait()
-
     r = sr.Recognizer()
     # Continuously listen for user input until they confirm or cancel
     with sr.Microphone() as source:
