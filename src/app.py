@@ -20,7 +20,17 @@ while True:
         init = 0
 
     # PART02: speech2text (whisper-large), input and transcribe
-    text = stt_model.transcribe(duration=5)
+    # FIXME: 每次都加载一次模型，太慢了
+    text = stt_model.transcribe(duration=3)
+    say_goodbye = [w for w in goodbyes if w in text]
+    if len(say_goodbye) > 0:
+        tts_model.speak_out_loud(
+            itext="拜了个拜, 回见.",
+            sr=24000,
+            language="zh-cn",
+            save_wav=False,
+        )
+        break
 
     # PART03: query the LLMs
     try:
@@ -36,15 +46,3 @@ while True:
         language="zh-cn",
         save_wav=False,
     )
-
-    # PART05: say goodbye
-    goodbyes = ["bye", "再见", ]
-    say_goodbye = [w for w in goodbyes if w in llm_response]
-    if len(say_goodbye) > 0:
-        tts_model.speak_out_loud(
-            itext="拜了个拜, 回见.",
-            sr=24000,
-            language="zh-cn",
-            save_wav=False,
-        )
-        break
