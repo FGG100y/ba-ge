@@ -1,6 +1,13 @@
-"""TTS using coqui_xtts-v2 as base model
+"""Text-To-Speech
+
+- coqui_xtts-v2 as base model (offline supported)
+
+- gtts-cli (online needed)
+
 """
+import os
 import tempfile
+
 import simpleaudio
 import torch
 from gtts import gTTS  # text to speech via google
@@ -17,16 +24,20 @@ model.load_checkpoint(
     config,
     checkpoint_dir="/home/ds01/hfLLMs/coqui_xtts-v2/",
     eval=True,
+    use_deepspeed=True,
 )
 if device != "cpu":
     model.cuda()
+
+print("Loading XTTS")
+
 
 speaker_wav = "./data/wavs/LJ001-0001.wav"
 input_text = """It took me quite a long time to develop a voice and now that I
 have it I am not going to be silent."""
 
 
-def speak_out_loud(
+def coquitts_speaker(
     model=model,
     config=config,
     itext=input_text,
@@ -37,16 +48,15 @@ def speak_out_loud(
     outputs = model.synthesize(
         itext,
         config,
-        speaker_wav=speaker_wav,
+        speaker_wav=speaker_wav,  # 声音克隆
         gpt_cond_len=3,  # what's this?
         language=language,
     )
-
     wav_arr = outputs["wav"]
 
     # IPython.display.Audio object:
-
     audio = Audio(wav_arr, rate=sr)
+
     if save_wav:
         with open("./tmp/test.wav", "wb") as f:
             f.write(audio.data)
@@ -57,7 +67,7 @@ def speak_out_loud(
     play_obj.wait_done()
 
 
-def speeker(texts, lang="zh-cn"):
+def googletts_speaker(texts, lang="zh-cn"):
     mixer.init()  # pygame mixer as audio player
     with tempfile.NamedTemporaryFile(delete=True) as fp:
         tts = gTTS(text=texts, lang=lang)
@@ -68,4 +78,4 @@ def speeker(texts, lang="zh-cn"):
 
 
 if __name__ == "__main__":
-    speak_out_loud(itext=input_text)
+    coquitts_speaker(itext=input_text)

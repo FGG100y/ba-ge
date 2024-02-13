@@ -5,7 +5,7 @@ alias SVRmixtral='./server -ngl 0 -c 8096 \
     -m ./models/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf \
     --alias mixtralMoE'
 
-cd /path/to/repo-of-llama.cpp/;
+cd /path/to/repo-of/llama.cpp/;
 run `SVRmixtral` which init mixtralMoE model using llama.cpp
 
 On laptop machine:
@@ -28,7 +28,7 @@ def query_llm(client=client, query=query, verbose=False):
     print("Start querying LLM ...")
     completion = client.chat.completions.create(
         model="gpt-3.5-turbo",
-        #  model="mixtralMoE",  # not work like this.
+        #  model="mixtralMoE",  # also work like this.
         messages=[
             #  {"role": "system", "content": ""},  # mixtralMoE not support it
             {"role": "user", "content": query},

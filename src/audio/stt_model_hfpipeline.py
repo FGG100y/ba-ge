@@ -6,6 +6,7 @@ from transformers.pipelines.audio_utils import ffmpeg_microphone_live
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
+# FIXME : consider fast-whisper
 localmodel = "/home/ds01/hfLLMs/whisper-large-v3"
 transcriber = pipeline(
     "automatic-speech-recognition", model=localmodel, device=device

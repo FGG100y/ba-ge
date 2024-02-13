@@ -1,3 +1,5 @@
+"""Set up microphone for voice stream using sounddevice
+"""
 import queue
 
 import numpy as np
