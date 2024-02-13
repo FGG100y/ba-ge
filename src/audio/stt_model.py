@@ -1,10 +1,9 @@
-#  import pyttsx3
-import speech_recognition as sr
-
-#  import whisper
 import platform
 
-# Get rid of ALSA lib error messages in Linux
+import speech_recognition as sr
+from faster_whisper import WhisperModel
+
+# Get rid of ALSA lib error messages in Linux ================================
 if platform.system() == "Linux":
     from ctypes import CFUNCTYPE, c_char_p, c_int, cdll
 
@@ -19,8 +18,36 @@ if platform.system() == "Linux":
     c_error_handler = error_handler(py_error_handler)
     asound = cdll.LoadLibrary("libasound.so")
     asound.snd_lib_error_set_handler(c_error_handler)
+# Get rid of ALSA lib error messages in Linux END ============================
 
 
+def transcribe_fast(duration=5):
+    """Using fast-whisper"""
+    modeldir = "/home/ds01/hfLLMs/faster-whisper-large-v2"
+    model = WhisperModel(model_size_or_path=modeldir, local_files_only=True)
+
+    # obtain audio from the microphone
+    r = sr.Recognizer()
+    with sr.Microphone() as source:
+        r.adjust_for_ambient_noise(source)
+        print("It's whisper listening, say something:")
+        audio = r.listen(source, phrase_time_limit=duration)
+
+    text = ""
+    segments, info = model.transcribe(audio)
+    for segment in segments:
+        print(
+            "[%.2fs -> %.2fs] %s" % (segment.start, segment.end, segment.text)
+        )
+        text += segment.text
+    print(text)
+    print(info)
+    breakpoint()
+
+    return text
+
+
+# TODO save wav of user for coqui-xtts cloning?
 # speech_recognition using `whisper` (which load .cache/whisper/model.pt)
 def transcribe(language="chinese", duration=5):
     """fixed interval stt"""
@@ -28,7 +55,7 @@ def transcribe(language="chinese", duration=5):
     r = sr.Recognizer()
     with sr.Microphone() as source:
         r.adjust_for_ambient_noise(source)
-        print("I'm whisper, I'm listening, say something:")
+        print("It's whisper listening, say something:")
         audio = r.listen(source, phrase_time_limit=duration)
 
     # recognize speech using whisper

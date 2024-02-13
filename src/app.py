@@ -1,31 +1,41 @@
+import os
+
 import openai
-from audio import listen_microphone as stt_model
-from audio import tts_model
+
+from audio import stt_model, tts_model
 from nlp import llm_model
 #  from wake_word.wake_detection import wakeBot
 from wake_word.wake_gamgin_stream import wake_gamgin
 
 init = 1
-goodbyes = ["bye", "再见", ]
+goodbyes = [
+    "bye",
+    "再见",
+]
 while True:
     # PART01: wake word detection
-    if (init and wake_gamgin()):
+    if init and wake_gamgin():
         # responding the calling:
-        tts_model.speak_out_loud(
+        tts_model.coquitts_speaker(
             itext="你好，金坚愿为您效劳",
             sr=24000,
             language="zh-cn",
             save_wav=False,
         )
+
         init = 0
 
     # PART02: speech2text (whisper-large), input and transcribe
     # FIXME: 每次都加载一次模型，太慢了
-    text = stt_model.transcribe(duration=3)
+    #  text = stt_model.transcribe(duration=3)
+    text = stt_model.transcribe_fast(duration=3)
+
+    breakpoint()
+
     say_goodbye = [w for w in goodbyes if w in text]
     if len(say_goodbye) > 0:
-        tts_model.speak_out_loud(
-            itext="拜了个拜, 回见.",
+        tts_model.coquitts_speaker(
+            itext="回聊，再见",
             sr=24000,
             language="zh-cn",
             save_wav=False,
@@ -40,7 +50,7 @@ while True:
         llm_response = "无法连接到大模型服务，请稍后再试"
 
     # PART04: TTS using coqui-tts/xtts-v2
-    tts_model.speak_out_loud(
+    tts_model.coquitts_speaker(
         itext=llm_response,
         sr=24000,
         language="zh-cn",
