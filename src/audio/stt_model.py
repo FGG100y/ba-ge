@@ -1,5 +1,7 @@
+import io
 import platform
 import numpy as np
+import soundfile as sf
 
 import speech_recognition as sr
 from faster_whisper import WhisperModel
@@ -21,30 +23,47 @@ if platform.system() == "Linux":
     asound.snd_lib_error_set_handler(c_error_handler)
 # Get rid of ALSA lib error messages in Linux END ============================
 
-modeldir = "models/hfLLMs/faster-whisper-large-v2"
-model = WhisperModel(model_size_or_path=modeldir, local_files_only=True)
+
+def load_faster_whisper():
+    modeldir = "models/hfLLMs/faster-whisper-large-v3"
+    model = WhisperModel(model_size_or_path=modeldir)  # local_files_only=True
+    print("Load whisper model from:", modeldir)
+    return model
 
 
-# FIXME 中文识别相当糟糕 2024-02-14 14:35:22 Wednesday
-def transcribe_fast(language="zh", duration=5, verbose=False):
+def transcribe_fast(model, language="zh", duration=5, verbose=False):
     """Using fast-whisper"""
 
     # obtain audio from the microphone
     r = sr.Recognizer()
     with sr.Microphone() as source:
         r.adjust_for_ambient_noise(source)
-        print("It's whisper listening, say something:")
+        print("It's faster-whisper listening, say something:")
         audio = r.listen(source, phrase_time_limit=duration)
 
-    # turn sr audio frame data into np.array data
-    audio_data = audio.get_wav_data()
-    data_s16 = np.frombuffer(
-        audio_data, dtype=np.int16, count=len(audio_data) // 2, offset=0
-    )
-    audio_float_data = data_s16.astype(np.float32, order="C") / 32768.0
+    # # NOTE that this block not work:
+    # # turn sr audio frame data into np.array data (from stackoverflow)
+    # # start from the bytes: (Or scipy.io.wavfile.read to read wav file)
+    #  data_s16 = np.frombuffer(
+    #      bytes, dtype=np.int16, count=len(bytes) // 2, offset=0
+    #  )
+    #  float_data = data_s16 * 0.5**15
+
+    #  audio_data = audio.get_wav_data()  # get bytes
+    #  data_s16 = np.frombuffer(
+    #      audio_data, dtype=np.int16, count=len(audio_data) // 2, offset=0
+    #  )
+    #  audio_float_data = data_s16.astype(np.float32, order="C") / 32768.0  # 2**15 # noqa
+    #  segments, info = model.transcribe(audio_float_data, language=language)
+
+    # from speech_recognition().recognize_whisper: (well done)
+    wav_bytes = audio.get_wav_data(convert_rate=16000)
+    wav_stream = io.BytesIO(wav_bytes)
+    audio_array, sampling_rate = sf.read(wav_stream)
+    audio_array = audio_array.astype(np.float32)
 
     text = ""
-    segments, info = model.transcribe(audio_float_data, language=language)
+    segments, info = model.transcribe(audio_array, language=language)
     for segment in segments:
         text += segment.text
         if verbose == 2:
@@ -52,13 +71,11 @@ def transcribe_fast(language="zh", duration=5, verbose=False):
                 "[%.2fs -> %.2fs] %s"
                 % (segment.start, segment.end, segment.text)
             )
-            print(text)
-
+            print("Final:", text)
     return text
 
 
 # TODO save wav of user for coqui-xtts cloning?
-# speech_recognition using `whisper` (which load .cache/whisper/model-X.pt)
 def transcribe(language="chinese", duration=5):
     """fixed interval stt"""
     # obtain audio from the microphone
@@ -68,7 +85,7 @@ def transcribe(language="chinese", duration=5):
         print("It's whisper listening, say something:")
         audio = r.listen(source, phrase_time_limit=duration)
 
-    # recognize speech using whisper
+    # speech_recognition using `whisper` (which load .cache/whisper/model-X.pt)
     try:
         text = r.recognize_whisper(audio, model="large", language=language)
         print("Whisper thinks you said:", text)
