@@ -1,4 +1,5 @@
 import platform
+import numpy as np
 
 import speech_recognition as sr
 from faster_whisper import WhisperModel
@@ -20,11 +21,13 @@ if platform.system() == "Linux":
     asound.snd_lib_error_set_handler(c_error_handler)
 # Get rid of ALSA lib error messages in Linux END ============================
 
+modeldir = "models/hfLLMs/faster-whisper-large-v2"
+model = WhisperModel(model_size_or_path=modeldir, local_files_only=True)
 
-def transcribe_fast(duration=5):
+
+# FIXME 中文识别相当糟糕 2024-02-14 14:35:22 Wednesday
+def transcribe_fast(language="zh", duration=5, verbose=False):
     """Using fast-whisper"""
-    modeldir = "/home/ds01/hfLLMs/faster-whisper-large-v2"
-    model = WhisperModel(model_size_or_path=modeldir, local_files_only=True)
 
     # obtain audio from the microphone
     r = sr.Recognizer()
@@ -33,22 +36,29 @@ def transcribe_fast(duration=5):
         print("It's whisper listening, say something:")
         audio = r.listen(source, phrase_time_limit=duration)
 
+    # turn sr audio frame data into np.array data
+    audio_data = audio.get_wav_data()
+    data_s16 = np.frombuffer(
+        audio_data, dtype=np.int16, count=len(audio_data) // 2, offset=0
+    )
+    audio_float_data = data_s16.astype(np.float32, order="C") / 32768.0
+
     text = ""
-    segments, info = model.transcribe(audio)
+    segments, info = model.transcribe(audio_float_data, language=language)
     for segment in segments:
-        print(
-            "[%.2fs -> %.2fs] %s" % (segment.start, segment.end, segment.text)
-        )
         text += segment.text
-    print(text)
-    print(info)
-    breakpoint()
+        if verbose == 2:
+            print(
+                "[%.2fs -> %.2fs] %s"
+                % (segment.start, segment.end, segment.text)
+            )
+            print(text)
 
     return text
 
 
 # TODO save wav of user for coqui-xtts cloning?
-# speech_recognition using `whisper` (which load .cache/whisper/model.pt)
+# speech_recognition using `whisper` (which load .cache/whisper/model-X.pt)
 def transcribe(language="chinese", duration=5):
     """fixed interval stt"""
     # obtain audio from the microphone
