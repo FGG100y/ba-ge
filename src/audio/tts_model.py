@@ -16,8 +16,8 @@ from pygame import mixer
 from TTS.tts.configs.xtts_config import XttsConfig
 from TTS.tts.models.xtts import Xtts
 
-device = "cpu"
-#  device = "cuda:0" if torch.cuda.is_available() else "cpu"
+#  device = "cpu"
+device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 checkpoint_dir = "models/hfLLMs/coqui_xtts-v2/"
 config = XttsConfig()
@@ -27,8 +27,8 @@ model.load_checkpoint(
     config,
     checkpoint_dir=checkpoint_dir,
     eval=True,
-    use_deepspeed=False,
-    #  use_deepspeed=True,  # GPU needed
+    #  use_deepspeed=False,  # CPU only; works ok
+    use_deepspeed=True,  # GPU;`nvcc --version` must match `torch.__version__`
 )
 if device != "cpu":
     model.cuda()
@@ -37,26 +37,26 @@ print("Loading XTTS from: ", checkpoint_dir)
 
 
 speaker_wav = "./data/wavs/LJ001-0001.wav"
-input_text = """It took me quite a long time to develop a voice and now that I
-have it I am not going to be silent."""
 
 
 def coquitts_speaker(
     model=model,
     config=config,
-    itext=input_text,
+    itext=None,
     sr=16000,
     language="en",
     save_wav=False,
 ):
-    outputs = model.synthesize(
+    outputs = model.synthesize(  # FIXME GPU not work
         itext,
         config,
-        speaker_wav=speaker_wav,  # 声音克隆
-        gpt_cond_len=3,  # what's this?
+        speaker_wav=speaker_wav,  # 声音克隆的音频文件
+        gpt_cond_len=5,  # Length of the audio used for cloning.
         language=language,
     )
     wav_arr = outputs["wav"]
+
+    breakpoint()
 
     # IPython.display.Audio object:
     audio = Audio(wav_arr, rate=sr)
@@ -82,4 +82,6 @@ def googletts_speaker(texts, lang="zh-cn"):
 
 
 if __name__ == "__main__":
+    input_text = """It took me quite a long time to develop a voice and now
+    that I have it I am not going to be silent."""
     coquitts_speaker(itext=input_text)
