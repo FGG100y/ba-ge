@@ -5,7 +5,7 @@
 - gtts-cli (online needed)
 
 """
-import os
+#  import os
 import tempfile
 
 import simpleaudio
@@ -18,30 +18,31 @@ from TTS.tts.models.xtts import Xtts
 
 #  device = "cpu"
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
-
-checkpoint_dir = "models/hfLLMs/coqui_xtts-v2/"
-config = XttsConfig()
-config.load_json(checkpoint_dir+"config.json")
-model = Xtts.init_from_config(config)
-model.load_checkpoint(
-    config,
-    checkpoint_dir=checkpoint_dir,
-    eval=True,
-    #  use_deepspeed=False,  # CPU only; works ok
-    use_deepspeed=True,  # GPU;`nvcc --version` must match `torch.__version__`
-)
-if device != "cpu":
-    model.cuda()
-
-print("Loading XTTS from: ", checkpoint_dir)
-
-
 speaker_wav = "./data/wavs/LJ001-0001.wav"
 
 
+def load_xtts_model():
+    checkpoint_dir = "models/hfLLMs/coqui_xtts-v2/"
+    config = XttsConfig()
+    config.load_json(checkpoint_dir+"config.json")
+    model = Xtts.init_from_config(config)
+    model.load_checkpoint(
+        config,
+        checkpoint_dir=checkpoint_dir,
+        eval=True,
+        #  use_deepspeed=False,  # CPU only; works ok
+        use_deepspeed=True,  # GPU: `nvcc --version` match `torch.__version__`
+    )
+    if device != "cpu":
+        model.cuda()
+
+    print("Loading XTTS from: ", checkpoint_dir)
+    return model, config
+
+
 def coquitts_speaker(
-    model=model,
-    config=config,
+    model,
+    config,
     itext=None,
     sr=16000,
     language="en",
