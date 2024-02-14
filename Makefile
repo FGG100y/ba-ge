@@ -22,7 +22,7 @@ export PYTHONBREAKPOINT = IPython.core.debugger.set_trace
 USING_PYENV := true
 WORK_OS_UNIX := true
 RUN_IN_DOCKER := false
-LOCAL_NETWORK := false
+# LOCAL_NETWORK := false
 
 # Virtual Environment directory name in the Container
 # Keep consist to VIRTUAL_ENV=/opt/venv in Dockerfile
