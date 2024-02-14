@@ -5,13 +5,6 @@
 对，就是那只最后投胎成了猫咪的、被小倩抛弃的、主人名叫宁采臣的小狗🐶 (gamgin) 。
 
 
-# 安装
-
-```sh
-python -m pip install gamgin
-```
-
-
 # 项目主要组件：
 
 ![voice-assistant](./images/voice-assistant.png)
@@ -33,8 +26,9 @@ python -m pip install gamgin
 
 - [ ] 废话小管家🐶
     - [x] pre-prototype (STT -> LLM -> TTS)
-    - [x] 快问慢答 （延迟严重）
-    - [ ] 快问快答 （延迟合适）
+    - [x] 等待语音转文字，耐心等待大模型回答 （延迟严重）
+    - [x] 语音转文字较快（延迟合适）
+    - [ ] 大模型快速回复（延迟合适）
     - [ ] 音色克隆
 
     - [ ] 少点废话小管家🐶
@@ -48,4 +42,21 @@ python -m pip install gamgin
         - [ ] 家电调参控制
         - [ ] ...
 
+
+# 安装
+
+```sh
+python -m pip install gamgin
+```
+
+
+# 开发
+
+```sh
+# # nvcc --version 与 pytorch.__version__ 不匹配的问题：
+# export PATH="/usr/local/cuda-12.3/bin:$PATH"
+
+# # libcudnn*.so.8 问题 (不用apt安装系统级依赖包，pytorch已打包这些依赖包)：
+# export LD_LIBRARY_PATH="/home/cll/.pyenv/versions/3.10.12/envs/vass-venv/lib/python3.10/site-packages/nvidia/cudnn/lib:$LD_LIBRARY_PATH"
+```
 
