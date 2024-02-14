@@ -16,20 +16,24 @@ from pygame import mixer
 from TTS.tts.configs.xtts_config import XttsConfig
 from TTS.tts.models.xtts import Xtts
 
-device = "cuda:0" if torch.cuda.is_available() else "cpu"
+device = "cpu"
+#  device = "cuda:0" if torch.cuda.is_available() else "cpu"
+
+checkpoint_dir = "models/hfLLMs/coqui_xtts-v2/"
 config = XttsConfig()
-config.load_json("/home/ds01/hfLLMs/coqui_xtts-v2/config.json")
+config.load_json(checkpoint_dir+"config.json")
 model = Xtts.init_from_config(config)
 model.load_checkpoint(
     config,
-    checkpoint_dir="/home/ds01/hfLLMs/coqui_xtts-v2/",
+    checkpoint_dir=checkpoint_dir,
     eval=True,
-    use_deepspeed=True,
+    use_deepspeed=False,
+    #  use_deepspeed=True,  # GPU needed
 )
 if device != "cpu":
     model.cuda()
 
-print("Loading XTTS")
+print("Loading XTTS from: ", checkpoint_dir)
 
 
 speaker_wav = "./data/wavs/LJ001-0001.wav"
