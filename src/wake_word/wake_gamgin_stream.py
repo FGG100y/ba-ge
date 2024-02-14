@@ -40,7 +40,7 @@ def wake_gamgin():
                 print("金坚 here at your service!")
                 return True
             else:
-                print("Waite for wake word ...")
+                print("Wait for the wake word ...")
 
 
 if __name__ == "__main__":
