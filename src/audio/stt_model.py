@@ -66,12 +66,13 @@ def transcribe_fast(model, language="zh", duration=5, verbose=False):
     segments, info = model.transcribe(audio_array, language=language)
     for segment in segments:
         text += segment.text
-        if verbose == 2:
+        if verbose:
             print(
                 "[%.2fs -> %.2fs] %s"
                 % (segment.start, segment.end, segment.text)
             )
-            print("Final:", text)
+        if verbose == 2:
+            print("model transciption info:", info)
     return text
 
 
