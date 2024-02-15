@@ -41,21 +41,6 @@ def transcribe_fast(model, language="zh", duration=5, verbose=False):
         print("It's faster-whisper listening, say something:")
         audio = r.listen(source, phrase_time_limit=duration)
 
-    # # NOTE that this block not work:
-    # # turn sr audio frame data into np.array data (from stackoverflow)
-    # # start from the bytes: (Or scipy.io.wavfile.read to read wav file)
-    #  data_s16 = np.frombuffer(
-    #      bytes, dtype=np.int16, count=len(bytes) // 2, offset=0
-    #  )
-    #  float_data = data_s16 * 0.5**15
-
-    #  audio_data = audio.get_wav_data()  # get bytes
-    #  data_s16 = np.frombuffer(
-    #      audio_data, dtype=np.int16, count=len(audio_data) // 2, offset=0
-    #  )
-    #  audio_float_data = data_s16.astype(np.float32, order="C") / 32768.0  # 2**15 # noqa
-    #  segments, info = model.transcribe(audio_float_data, language=language)
-
     # from speech_recognition().recognize_whisper: (well done)
     wav_bytes = audio.get_wav_data(convert_rate=16000)
     wav_stream = io.BytesIO(wav_bytes)
