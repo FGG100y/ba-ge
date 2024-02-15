@@ -16,6 +16,10 @@ from pygame import mixer
 from TTS.tts.configs.xtts_config import XttsConfig
 from TTS.tts.models.xtts import Xtts
 
+import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+from pygame import mixer  # noqa
+
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 use_deepspeed = True  # GPU: `nvcc --version` must match `torch.__version__`
