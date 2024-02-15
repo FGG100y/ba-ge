@@ -99,32 +99,32 @@ run_app:
 .PHONY: harmony
 ## Check src/ layout for importing module (temporary check of the scaffold)
 harmony:
-	$(PYTHON) ./src/cythonpkg/harmony.py
+	$(PYTHON) src/cythonpkg/harmony.py
 
 .PHONY: wakeup
 ## Wake the bot up
 wakeup:
-	$(PYTHON) ./src/wake_detection.py
+	$(PYTHON) src/wake_word/wake_gamgin_stream.py
 
 .PHONY: query_LLM
 ## Query the LLM
 query_LLM:
-	$(PYTHON) ./src/llm_model.py
+	$(PYTHON) src/nlp/llm_model.py
 
-.PHONY: stt_whisper_sr
-## STT using whisper (speech_recognition)
-stt_whisper_sr:
-	$(PYTHON) ./src/listen_microphone.py
+# .PHONY: stt_whisper_sr
+# ## STT using whisper (speech_recognition)
+# stt_whisper_sr:
+#     $(PYTHON) src/listen_microphone.py
 
 .PHONY: tts_coqui
 ## TTS using coqui_xtts-v2 (huggingface model)
 tts_coqui:
-	$(PYTHON) ./src/tts_model.py
+	$(PYTHON) src/audio/tts_model.py
 
 .PHONY: stt_whisper_webui
 ## STT using whisper on webui
 stt_whisper_webui:
-	streamlit run ./src/stream_webrtc_stt_whisper.py
+	streamlit run src/audio/stream_webrtc_stt_whisper.py
 
 
 # 数据库访问密码的加密；
