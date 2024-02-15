@@ -14,8 +14,6 @@ export PYTHONBREAKPOINT = IPython.core.debugger.set_trace
 # 从代码仓库克隆到本地之后，使用 `make install` 启动并创建项目运行环境 		 #
 # 从代码仓库克隆到本地之后，使用 `make init_projectdata` 同步依赖数据集		 #
 #																			 #
-# 如果平台系统为 Windows 则先行安装 Git-for-Windows (推荐), 在其中运行本项目 #
-#																			 #
 # requirements.txt 文件用于保证所有新克隆出来的项目具有完整的运行环境依赖包  #
 ##############################################################################
 
@@ -92,7 +90,7 @@ project_info:
 #																			 #
 ##############################################################################
 .PHONY: app_run
-## RUN THE PROJECT APP >>> ALL IN ONE GO
+## RUN THE APP
 app_run:
 	$(PYTHON) src/app.py
 
@@ -151,18 +149,17 @@ stt_whisper_webui:
 # USER := fmh
 # # LOCAL_NETWORK := false
 # ifeq ($(LOCAL_NETWORK),false)
-#     HOSTNAME := gddst.wicp.vip
+#     HOSTNAME := 
 #     PORT := 2221
 # else
-#     HOSTNAME := 172.16.0.183
+#     HOSTNAME := 
 #     PORT := 22
 # endif
 #
 # .PHONY: sync_data
 # ## DEPENDENT DATA SYNCHRONIZATION
 # sync_data: $(RSYNC)
-#     rsync -azv --exclude 'tmp*' -e 'ssh -p $(PORT)' $(USER)@$(HOSTNAME):/home/$(USER)/dataGroup/projects/gzhzz/src/config ./src/
-#     rsync -azv --exclude 'tmp*' -e 'ssh -p $(PORT)' $(USER)@$(HOSTNAME):/home/$(USER)/dataGroup/projects/gzhzz/data .
+#     rsync -azv --exclude 'tmp*' -e 'ssh -p $(PORT)' $(USER)@$(HOSTNAME):/home/$(USER)/data .
 #
 # HAS_RSYNC := $(shell command -v rsync 2> /dev/null)
 # $(RSYNC):
@@ -173,9 +170,6 @@ stt_whisper_webui:
 # ============================================================================
 # NOTE SECTION TWO-------***DATA MODELING & PREDICTION***---------------------
 # ============================================================================
-# .PHONY: run_modeltask
-# ## MODLE TRAINING, PREDICTION & MAKE THE FINAL RESULT
-# run_modeltask: model_train model_predict final_result model_performance
 
 # =============================================================
 # * train classifier
@@ -183,30 +177,6 @@ stt_whisper_webui:
 # * result IO (DataBase)
 # =============================================================
 
-# RUN_BICLFIER := 1
-# ifeq ($(RUN_BICLFIER),1)
-#     LABELSYS := wqc_2cls
-# else
-#     LABELSYS := wqc_lmh
-# endif
-#
-# DNN_TO_PREDICT := 1
-# ifeq ($(DNN_TO_PREDICT),2)
-#     CLFIER_ACHI := tfk
-# else ifeq ($(DNN_TO_PREDICT),1)
-#     CLFIER_ACHI := xgb
-# else
-#     CLFIER_ACHI := skl
-# endif
-#
-# N_TREES := 1000
-
-# .PHONY: model_train
-# Train classification model
-# model_train:
-#     rm -f ./data/interim/reengineering_ssl_added_samples.csv
-#     @echo 'delete file: ./data/interim/reengineering_ssl_added_samples.csv'
-#     $(PYTHON) ./src/models/train_model.py --labelsys $(LABELSYS) --n_estimators $(N_TREES) -v 2
 
 
 ##############################################################################
@@ -248,11 +218,6 @@ wheels: clean clean-cpp
 	python -m build
 
 
-.PHONY: freeze
-## Generate project's requirements file
-freeze:
-	$(PYTHON) -m pip freeze | grep -v "pkg-resources" > requirements.txt
-
 # find . -type d -name "__pycache__" -delete
 .PHONY: clean-all
 ## Delete all compiled Python files and remove venv
@@ -269,11 +234,6 @@ lint:
 ## Test using pytest
 test:
 	$(PYTHON) -m pytest
-
-# .PHONY: ipynb2html
-# ## Turn .ipynb file to html-with-toc
-# ipynb2html:
-#     $(VENV)/bin/jupyter nbconvert notebook_*.ipynb --template toc2 --CodeFoldingPreprocessor.remove_folded_code=True
 
 ##############################################################################
 # Self Documenting Commands                                                  #
