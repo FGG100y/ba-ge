@@ -12,7 +12,6 @@ import simpleaudio
 import torch
 from gtts import gTTS  # text to speech via google
 from IPython.display import Audio
-from pygame import mixer
 from TTS.tts.configs.xtts_config import XttsConfig
 from TTS.tts.models.xtts import Xtts
 
@@ -22,8 +21,9 @@ from pygame import mixer  # noqa
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
-use_deepspeed = True  # GPU: `nvcc --version` must match `torch.__version__`
-if use_deepspeed:
+# GPU: `nvcc --version` must match `torch.__version__`
+use_deepspeed = False
+if not use_deepspeed:
     device = "cpu"  # CPU only; works ok
 
 # for voice clone:
@@ -36,7 +36,7 @@ def load_xtts_model():
     config.load_json(checkpoint_dir+"config.json")
     model = Xtts.init_from_config(config)
     model.load_checkpoint(
-        config,
+        config=config,
         checkpoint_dir=checkpoint_dir,
         use_deepspeed=use_deepspeed,
         eval=True,
@@ -48,7 +48,8 @@ def load_xtts_model():
     return model, config
 
 
-def coquitts_speaker(
+# NOTE max chars of 82 limited in language "zh":
+def coquitts_speaker(  # FIXME not speak out
     model,
     config,
     itext=None,
@@ -56,7 +57,7 @@ def coquitts_speaker(
     language="en",
     save_wav=False,
 ):
-    outputs = model.synthesize(  # FIXME GPU not work
+    outputs = model.synthesize(
         itext,
         config,
         speaker_wav=speaker_wav,  # 声音克隆的音频文件
@@ -64,8 +65,6 @@ def coquitts_speaker(
         language=language,
     )
     wav_arr = outputs["wav"]
-
-    breakpoint()
 
     # IPython.display.Audio object:
     audio = Audio(wav_arr, rate=sr)
@@ -100,4 +99,10 @@ def googletts_speaker(texts, lang="en", tld='com.hk'):
 if __name__ == "__main__":
     input_text = """It took me quite a long time to develop a voice and now
     that I have it I am not going to be silent."""
-    coquitts_speaker(itext=input_text)
+    use_gtts = True
+
+    if use_gtts:
+        googletts_speaker(input_text, lang="en", tld='com')
+    else:
+        xtts_model, config = load_xtts_model()
+        coquitts_speaker(xtts_model, config, itext=input_text)
