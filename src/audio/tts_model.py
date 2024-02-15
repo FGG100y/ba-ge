@@ -16,8 +16,13 @@ from pygame import mixer
 from TTS.tts.configs.xtts_config import XttsConfig
 from TTS.tts.models.xtts import Xtts
 
-#  device = "cpu"
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
+
+use_deepspeed = True  # GPU: `nvcc --version` must match `torch.__version__`
+if use_deepspeed:
+    device = "cpu"  # CPU only; works ok
+
+# for voice clone:
 speaker_wav = "./data/wavs/LJ001-0001.wav"
 
 
@@ -29,9 +34,8 @@ def load_xtts_model():
     model.load_checkpoint(
         config,
         checkpoint_dir=checkpoint_dir,
+        use_deepspeed=use_deepspeed,
         eval=True,
-        #  use_deepspeed=False,  # CPU only; works ok
-        use_deepspeed=True,  # GPU: `nvcc --version` match `torch.__version__`
     )
     if device != "cpu":
         model.cuda()
