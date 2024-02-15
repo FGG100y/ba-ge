@@ -1,8 +1,8 @@
 """Text-To-Speech
 
-- coqui_xtts-v2 as base model (offline supported)
+- coqui_xtts-v2 as offline model (supported)
 
-- gtts-cli (online needed)
+- gtts-cli (online needed, network blocking issue)
 
 """
 
