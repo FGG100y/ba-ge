@@ -8,9 +8,19 @@ alias SVRmixtral='./server -ngl 0 -c 8096 \
 cd /path/to/repo-of/llama.cpp/;
 run `SVRmixtral` which init mixtralMoE model using llama.cpp
 
-On laptop machine:
-run `connect_llm_server PORT` (e.g., connect_llm_server 8080)
-where `connect_llm_server` is a bash function to connect to remote server.
+01 when the LLM is on the laptop (no remote server things):
+
+- On laptop machine CLI:
+    just run: `python3 src/nlp/llm_model.py`
+
+02 when the LLM is on a remote server:
+
+- On laptop machine CLI:
+    run1: `connect_llm_server PORT` (e.g., connect_llm_server 8080)
+        where `connect_llm_server` is a bash function to forward localhost of
+        remote server. So the script can make query to 'localhost:port'.
+
+    run2: `python3 src/nlp/llm_model.py`
 
 """
 import openai
