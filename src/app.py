@@ -15,9 +15,9 @@ GOODBYES = [
 ]
 
 init = 1
-use_gtts = True
+use_gtts = False
 if init and not use_gtts:
-    XTTS, CONFIG = tts_model.load_xtts_model()
+    XTTS_MODEL, CONFIG = tts_model.load_xtts_model()
 
 make_it_polite = False
 use_faster_whisper = True
@@ -28,14 +28,14 @@ while True:
     # PART01: wake word detection
     if init and wake_gamgin():
         # responding the calling:
-        hello_text = "你好，金坚愿为您效劳",
+        greeting = "你好，金坚愿为您效劳"
         if use_gtts:
-            tts_model.googletts_speaker(hello_text, lang="zh-CN")
+            tts_model.googletts_speaker(greeting, lang="zh-CN")
         else:
             tts_model.coquitts_speaker(
-                model=XTTS,
+                model=XTTS_MODEL,
                 config=CONFIG,
-                itext=hello_text,
+                intext=greeting,
                 sr=24000,
                 language="zh-cn",
                 save_wav=False,
@@ -55,9 +55,9 @@ while True:
     if len(say_goodbye) > 0:
         if make_it_polite:
             tts_model.coquitts_speaker(
-                model=XTTS,
+                model=XTTS_MODEL,
                 config=CONFIG,
-                itext="回聊，再见",
+                intext="回聊，再见",
                 sr=24000,
                 language="zh-cn",
                 save_wav=False,
@@ -73,9 +73,9 @@ while True:
 
     # PART04: TTS using coqui-tts/xtts-v2
     tts_model.coquitts_speaker(
-        model=XTTS,
+        model=XTTS_MODEL,
         config=CONFIG,
-        itext=llm_response,
+        intext=llm_response,
         sr=24000,
         language="zh-cn",
         save_wav=False,

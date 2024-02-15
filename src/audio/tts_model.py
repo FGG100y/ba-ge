@@ -5,7 +5,9 @@
 - gtts-cli (online needed)
 
 """
+
 from io import BytesIO
+
 #  import tempfile
 
 import simpleaudio
@@ -16,7 +18,8 @@ from TTS.tts.configs.xtts_config import XttsConfig
 from TTS.tts.models.xtts import Xtts
 
 import os
-os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 from pygame import mixer  # noqa
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -33,7 +36,7 @@ speaker_wav = "./data/wavs/LJ001-0001.wav"
 def load_xtts_model():
     checkpoint_dir = "models/hfLLMs/coqui_xtts-v2/"
     config = XttsConfig()
-    config.load_json(checkpoint_dir+"config.json")
+    config.load_json(checkpoint_dir + "config.json")
     model = Xtts.init_from_config(config)
     model.load_checkpoint(
         config=config,
@@ -49,17 +52,17 @@ def load_xtts_model():
 
 
 # NOTE max chars of 82 limited in language "zh":
-def coquitts_speaker(  # FIXME not speak out
+def coquitts_speaker(
     model,
     config,
-    itext=None,
+    intext=None,
     sr=16000,
     language="en",
     save_wav=False,
 ):
     outputs = model.synthesize(
-        itext,
-        config,
+        text=intext,
+        config=config,
         speaker_wav=speaker_wav,  # 声音克隆的音频文件
         gpt_cond_len=5,  # Length of the audio used for cloning.
         language=language,
@@ -81,7 +84,7 @@ def coquitts_speaker(  # FIXME not speak out
 
 # NOTE network blocking issue
 # NOTE GOOGLE_TTS_MAX_CHARS = 100  # Max characters the Google TTS API takes at a time # noqa
-def googletts_speaker(texts, lang="en", tld='com.hk'):
+def googletts_speaker(texts, lang="en", tld="com.hk"):
     mixer.init()  # pygame mixer as audio player
     mp3_fp = BytesIO()
     tts = gTTS(text=texts, lang=lang, tld=tld)
@@ -99,10 +102,14 @@ def googletts_speaker(texts, lang="en", tld='com.hk'):
 if __name__ == "__main__":
     input_text = """It took me quite a long time to develop a voice and now
     that I have it I am not going to be silent."""
-    use_gtts = True
+    input_text_zh = "黄四娘家花满蹊，千朵万朵压枝低"
+    use_gtts = False
 
-    if use_gtts:
-        googletts_speaker(input_text, lang="en", tld='com')
+    if use_gtts:  # network blocking
+        googletts_speaker(input_text, lang="en", tld="com")
     else:
         xtts_model, config = load_xtts_model()
-        coquitts_speaker(xtts_model, config, itext=input_text)
+        #  coquitts_speaker(xtts_model, config, intext=input_text)
+        coquitts_speaker(
+            xtts_model, config, intext=input_text_zh, language="zh-cn"
+        )
