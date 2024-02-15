@@ -1,4 +1,4 @@
-import os
+#  import os
 
 import openai
 
@@ -8,11 +8,17 @@ from nlp import llm_model
 #  from wake_word.wake_detection import wakeBot
 from wake_word.wake_gamgin_stream import wake_gamgin
 
-init = 0
-goodbyes = [
-    "bye",
+GOODBYES = [
     "再见",
+    "退下吧",
+    "byebye",
 ]
+
+init = 1
+use_gtts = True
+if init and not use_gtts:
+    XTTS, CONFIG = tts_model.load_xtts_model()
+
 make_it_polite = False
 use_faster_whisper = True
 if use_faster_whisper:
@@ -21,16 +27,19 @@ if use_faster_whisper:
 while True:
     # PART01: wake word detection
     if init and wake_gamgin():
-        model, config = tts_model.load_xtts_model()
         # responding the calling:
-        tts_model.coquitts_speaker(
-            model=model,
-            config=config,
-            itext="你好，金坚愿为您效劳",
-            sr=24000,
-            language="zh-cn",
-            save_wav=False,
-        )
+        hello_text = "你好，金坚愿为您效劳",
+        if use_gtts:
+            tts_model.googletts_speaker(hello_text, lang="zh-CN")
+        else:
+            tts_model.coquitts_speaker(
+                model=XTTS,
+                config=CONFIG,
+                itext=hello_text,
+                sr=24000,
+                language="zh-cn",
+                save_wav=False,
+            )
 
         init = 0
 
@@ -39,13 +48,15 @@ while True:
     #  breakpoint()
 
     text = stt_model.transcribe_fast(
-        model=faster_whisper, duration=6, verbose=2
+        model=faster_whisper, duration=30, verbose=2
     )
 
-    say_goodbye = [w for w in goodbyes if w in text]
+    say_goodbye = [w for w in GOODBYES if w in text]
     if len(say_goodbye) > 0:
         if make_it_polite:
             tts_model.coquitts_speaker(
+                model=XTTS,
+                config=CONFIG,
                 itext="回聊，再见",
                 sr=24000,
                 language="zh-cn",
@@ -62,6 +73,8 @@ while True:
 
     # PART04: TTS using coqui-tts/xtts-v2
     tts_model.coquitts_speaker(
+        model=XTTS,
+        config=CONFIG,
         itext=llm_response,
         sr=24000,
         language="zh-cn",

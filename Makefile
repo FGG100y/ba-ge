@@ -91,9 +91,9 @@ project_info:
 #   例如：当前存在一个命名为 run_alltask 的文件, make 照样运行这个任务		 #
 #																			 #
 ##############################################################################
-.PHONY: run_app
+.PHONY: app_run
 ## RUN THE PROJECT APP >>> ALL IN ONE GO
-run_app:
+app_run:
 	$(PYTHON) src/app.py
 
 .PHONY: harmony
@@ -116,9 +116,9 @@ query_LLM:
 # stt_whisper_sr:
 #     $(PYTHON) src/listen_microphone.py
 
-.PHONY: tts_coqui
-## TTS using coqui_xtts-v2 (huggingface model)
-tts_coqui:
+.PHONY: tts_speak
+## TTS using gTTs or coqui_xtts-v2 (huggingface model)
+tts_speak:
 	$(PYTHON) src/audio/tts_model.py
 
 .PHONY: stt_whisper_webui
