@@ -5,8 +5,8 @@
 - gtts-cli (online needed)
 
 """
-#  import os
-import tempfile
+from io import BytesIO
+#  import tempfile
 
 import simpleaudio
 import torch
@@ -80,13 +80,20 @@ def coquitts_speaker(
     play_obj.wait_done()
 
 
-def googletts_speaker(texts, lang="zh-cn"):
+# NOTE network blocking issue
+# NOTE GOOGLE_TTS_MAX_CHARS = 100  # Max characters the Google TTS API takes at a time # noqa
+def googletts_speaker(texts, lang="en", tld='com.hk'):
     mixer.init()  # pygame mixer as audio player
-    with tempfile.NamedTemporaryFile(delete=True) as fp:
-        tts = gTTS(text=texts, lang=lang)
-        tts.save("{}.mp3".format(fp.name))
-        mixer.music.load("{}.mp3".format(fp.name))
-        mixer.music.play()
+    mp3_fp = BytesIO()
+    tts = gTTS(text=texts, lang=lang, tld=tld)
+    tts.write_to_fp(mp3_fp)
+    mixer.music.load(mp3_fp)
+    mixer.music.play()
+    #  with tempfile.NamedTemporaryFile(delete_on_close=True) as fp:
+    #      tts = gTTS(text=texts, lang=lang, tld=tld)
+    #      tts.save("{}.mp3".format(fp.name))
+    #      mixer.music.load("{}.mp3".format(fp.name))
+    #      mixer.music.play()
     print(texts)
 
 
