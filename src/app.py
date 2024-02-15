@@ -36,7 +36,7 @@ while True:
                 model=XTTS_MODEL,
                 config=CONFIG,
                 intext=greeting,
-                sr=24000,
+                sr=16000,
                 language="zh-cn",
                 save_wav=False,
             )
@@ -44,21 +44,21 @@ while True:
         init = 0
 
     # PART02: speech2text (whisper-large), input and transcribe
-    #  text = stt_model.transcribe(duration=3)
+    #  speech2text = stt_model.transcribe(duration=3)
     #  breakpoint()
 
-    text = stt_model.transcribe_fast(
-        model=faster_whisper, duration=30, verbose=2
+    speech2text = stt_model.transcribe_fast(
+        model=faster_whisper, duration=20, verbose=1
     )
 
-    say_goodbye = [w for w in GOODBYES if w in text]
+    say_goodbye = [w for w in GOODBYES if w in speech2text]
     if len(say_goodbye) > 0:
         if make_it_polite:
             tts_model.coquitts_speaker(
                 model=XTTS_MODEL,
                 config=CONFIG,
                 intext="回聊，再见",
-                sr=24000,
+                sr=16000,
                 language="zh-cn",
                 save_wav=False,
             )
@@ -66,17 +66,17 @@ while True:
 
     # PART03: query the LLMs
     try:
-        #  query = "Hello, how are you today?" if text is None else text
-        llm_response = llm_model.query_llm(query=text, verbose=True)
+        # (FIXME later): limit response lenght < 72 chars (coqui-tts limit):
+        prompt = speech2text + " 请简答，并且字数少于72个。"
+        llm_response = llm_model.query_llm(query=prompt, verbose=True)
     except (ConnectionRefusedError, openai.APIConnectionError):
         llm_response = "无法连接到大模型服务，请稍后再试"
-
-    # PART04: TTS using coqui-tts/xtts-v2
+    # PART04: TTS of LLM result
     tts_model.coquitts_speaker(
         model=XTTS_MODEL,
         config=CONFIG,
         intext=llm_response,
-        sr=24000,
+        sr=16000,
         language="zh-cn",
         save_wav=False,
     )
