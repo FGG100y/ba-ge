@@ -1,5 +1,5 @@
 """
-On server side:
+In Linux CLI:
 
 alias SVRmixtral='./server -ngl 0 -c 8096 \
     -m ./models/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf \
@@ -47,7 +47,7 @@ def query_llm(client=client, query=query, verbose=False):
 
     response = completion.choices[0].message.content
     if verbose:  # working as expected 2024-01-19
-        print("user:", query)
+        print("usr:", query)
         print("bot:", response)
 
     return response
