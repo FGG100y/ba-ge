@@ -13,7 +13,7 @@
 - STT: ASR模型 -- whishper-large/faster-whisper
 - LLM: mixtral-7x8b-instruct.gguf -- llama.cpp server
 - TTS: coqui-ai xtts -- limited 82 chars (400 tokens) to zh-cn (FIXME)
-- TTS alternative: elevenlabs
+- TTS alternative: elevenlabs  -- 长度限制宽松的很，但尚未有汉语纯正口音
 
 
 # 主要功能：
@@ -29,9 +29,9 @@
     - [x] pre-prototype (STT -> LLM -> TTS)
     - [x] 等待语音转文字，耐心等待大模型回答 （延迟严重）
     - [x] 语音转文字较快（延迟合适）
-    - [ ] 大模型快速回复（延迟合适）(需要更强计算能力）
-    - [ ] 中文语音合成长度限制问题
-    - [ ] 音色克隆
+    - [x] 解决中文语音合成长度限制问题 (但😂 elevenlabs 送来的是一只洋金坚🐶)
+    - [ ] 音调、音色克隆 (洋金坚 -- 口音问题)
+    - [ ] 大模型快速回复（延迟合适）(需要更强计算能力支撑）
 
     - [ ] 少点废话小管家🐶
         - [ ] 播放本地音乐
