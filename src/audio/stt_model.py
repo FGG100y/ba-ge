@@ -31,13 +31,13 @@ def load_faster_whisper():
     return model
 
 
-def transcribe_fast(model, language="zh", duration=5, verbose=False):
+def transcribe_fast(model, language="zh", duration=50, verbose=False):
     """Using fast-whisper"""
 
     # obtain audio from the microphone
     r = sr.Recognizer()
     with sr.Microphone() as source:
-        r.adjust_for_ambient_noise(source)
+        r.adjust_for_ambient_noise(source, duration=3)
         print("It's faster-whisper listening, say something:")
         audio = r.listen(source, phrase_time_limit=duration)
 
