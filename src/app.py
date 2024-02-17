@@ -1,20 +1,17 @@
-#  import os
-
 import openai
 
 from audio import stt_model, tts_model, tts_elevenlabs
 from nlp import llm_model
 
-#  from wake_word.wake_detection import wakeBot
 from wake_word.wake_gamgin_stream import wake_gamgin
 
 GOODBYES = [
-    # 朋友
+    # 都是朋友
     "再见",
     "再見",
     "先这样",
     "byebye",
-    # 奴仆
+    # 惹人生气
     "滚蛋",
     "跪安吧",
     "退下吧",
@@ -26,9 +23,8 @@ wake_again = False
 make_bot_polite = True
 XTTS_MODEL, CONFIG = tts_model.load_xtts_model()
 
-use_faster_whisper = True
-if use_faster_whisper:
-    faster_whisper = stt_model.load_faster_whisper()
+#  use_faster_whisper = True
+faster_whisper = stt_model.load_faster_whisper()
 
 
 def tts_greeting(greeting, use_11labs=False, use_gtts=False, xtts_sr=16000):
@@ -58,14 +54,11 @@ while True:
 
     if init and wake_gamgin():
         # responding the calling:
-        hello = "盆友你好"
+        hello = "盆友，你好"
         tts_greeting(hello, xtts_sr=24000)
         init = 0
 
-    # PART02: speech2text (whisper-large), input and transcribe
-    #  speech2text = stt_model.transcribe(duration=3)
-    #  breakpoint()
-
+    # PART02: speech2text (faster-whisper-large), input and transcribe
     speech2text = stt_model.transcribe_fast(
         model=faster_whisper, duration=50, verbose=1
     )
@@ -97,4 +90,4 @@ while True:
     if no_llm:
         tts_greeting(llm_response)
     else:
-        tts_greeting(llm_response, use_11labs=True)
+        tts_greeting(llm_response, use_11labs=False, xtts_sr=24000)
