@@ -26,6 +26,7 @@ client = ElevenLabs(api_key=api_key)
 def lllabs_speaker(intext):
     audio = generate(
         text=intext,
+        api_key=api_key,
         voice="Alice",
         model="eleven_turbo_v2",
     )
