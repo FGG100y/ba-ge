@@ -1,6 +1,5 @@
 import os
 
-#  import numpy as np
 import pvporcupine
 from dotenv import load_dotenv
 
@@ -33,14 +32,16 @@ def wake_gamgin():
         while True:
             frame_data = next(audio_generator)
             keyword_index = porcupine.process(frame_data)
-            if (
-                keyword_index >= 0
-            ):  # Wake Word Detected! Do your stuff here... e.g.:
-                print("Wake word detected!", end=" ")
-                print("金坚 here at your service!")
+            if keyword_index >= 0:
+                wake_word_detected = "\n-*-金坚-*- 听到您的呼唤了:)"
+                print(wake_word_detected)
                 return True
             else:
-                print("Wait for the wake word ...")
+                standy = " 🐶金坚🐶  等待呼唤 📞 ...."
+                print(f"\r{standy}", end="")
+                #  # alternative:
+                #  sys.stdout.write("\r" + standy)
+                #  sys.stdout.flush()
 
 
 if __name__ == "__main__":
