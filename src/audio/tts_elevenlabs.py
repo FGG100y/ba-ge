@@ -23,12 +23,12 @@ client = ElevenLabs(api_key=api_key)
 
 
 # elevenlabs 0.3.a
-def lllabs_speaker(intext):
+def lllabs_speaker(intext, voice="Alice", model="eleven_turbo_v2"):
     audio = generate(
         text=intext,
         api_key=api_key,
-        voice="Alice",
-        model="eleven_turbo_v2",
+        voice=voice,
+        model=model,
     )
 
     play(audio)

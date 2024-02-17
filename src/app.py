@@ -11,6 +11,7 @@ from wake_word.wake_gamgin_stream import wake_gamgin
 GOODBYES = [
     # 朋友
     "再见",
+    "再見",
     "先这样",
     "byebye",
     # 奴仆
@@ -20,28 +21,27 @@ GOODBYES = [
 ]
 
 init = 1
-use_gtts = False
-use_11labs = True
-if init and not use_gtts and not use_11labs:
-    XTTS_MODEL, CONFIG = tts_model.load_xtts_model()
 
-make_it_polite = True
+make_bot_polite = True
 use_faster_whisper = True
 if use_faster_whisper:
     faster_whisper = stt_model.load_faster_whisper()
 
 
-def tts_greeting(greeting):
+def tts_greeting(greeting, use_11labs=False, use_gtts=False, xtts_sr=16000):
     if use_11labs:
-        tts_elevenlabs.lllabs_speaker(intext=greeting)
+        tts_elevenlabs.lllabs_speaker(
+            intext=greeting, voice="Rachel", model="eleven_multilingual_v2"
+        )
     elif use_gtts:  # FIXME gtts not work (mainly) due to network issues
         tts_model.googletts_speaker(greeting, lang="zh-CN")
     else:
+        XTTS_MODEL, CONFIG = tts_model.load_xtts_model()
         tts_model.coquitts_speaker(
             model=XTTS_MODEL,
             config=CONFIG,
             intext=greeting,
-            sr=16000,
+            sr=xtts_sr,
             language="zh-cn",
             save_wav=False,
         )
@@ -52,7 +52,7 @@ while True:
     if init and wake_gamgin():
         # responding the calling:
         hello = "盆友你好"
-        tts_greeting(hello)
+        tts_greeting(hello, xtts_sr=24000)
         init = 0
 
     # PART02: speech2text (whisper-large), input and transcribe
@@ -65,9 +65,9 @@ while True:
 
     say_goodbye = [w for w in GOODBYES if w in speech2text]
     if len(say_goodbye) > 0:
-        if make_it_polite:
-            intext = "回聊，盆友再见",
-            tts_greeting(intext)
+        if make_bot_polite:
+            intext = "盆友再见, 回聊"
+            tts_greeting(intext, xtts_sr=24000)
 
         #  break  # 结束程序
 
@@ -78,12 +78,15 @@ while True:
     # PART03: query the LLMs
     try:
         # (FIXME later): limit response lenght < 72 chars (coqui-tts limit):
-        if use_11labs:
-            prompt = speech2text
-        else:
-            prompt = speech2text + " 请简答，并且字数少于72个。"
+        prompt = speech2text + " 请简答，并且字数少于72个。"
         llm_response = llm_model.query_llm(query=prompt, verbose=True)
+        no_llm = False
     except (ConnectionRefusedError, openai.APIConnectionError):
         llm_response = "无法连接到大模型服务，请稍后再试"
+        no_llm = True
+
     # PART04: TTS of LLM result
-    tts_greeting(llm_response)
+    if no_llm:
+        tts_greeting(llm_response)
+    else:
+        tts_greeting(llm_response, use_11labs=True)
