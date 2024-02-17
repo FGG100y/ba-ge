@@ -21,8 +21,11 @@ GOODBYES = [
 ]
 
 init = 1
+wake_again = False
 
 make_bot_polite = True
+XTTS_MODEL, CONFIG = tts_model.load_xtts_model()
+
 use_faster_whisper = True
 if use_faster_whisper:
     faster_whisper = stt_model.load_faster_whisper()
@@ -36,7 +39,6 @@ def tts_greeting(greeting, use_11labs=False, use_gtts=False, xtts_sr=16000):
     elif use_gtts:  # FIXME gtts not work (mainly) due to network issues
         tts_model.googletts_speaker(greeting, lang="zh-CN")
     else:
-        XTTS_MODEL, CONFIG = tts_model.load_xtts_model()
         tts_model.coquitts_speaker(
             model=XTTS_MODEL,
             config=CONFIG,
@@ -49,6 +51,11 @@ def tts_greeting(greeting, use_11labs=False, use_gtts=False, xtts_sr=16000):
 
 while True:
     # PART01: wake word detection
+
+    if not init and wake_again:
+        hello_again = "我在呢，请问有什么可以帮忙的？"
+        tts_greeting(hello_again, xtts_sr=24000)
+
     if init and wake_gamgin():
         # responding the calling:
         hello = "盆友你好"
@@ -66,13 +73,14 @@ while True:
     say_goodbye = [w for w in GOODBYES if w in speech2text]
     if len(say_goodbye) > 0:
         if make_bot_polite:
-            intext = "盆友再见, 回聊"
+            intext = "盆友再见, 下次聊"
             tts_greeting(intext, xtts_sr=24000)
 
         #  break  # 结束程序
 
         # 如果用户说再见，则进入等待唤醒状态
         if wake_gamgin():
+            wake_again = True
             continue
 
     # PART03: query the LLMs
