@@ -72,12 +72,12 @@ while True:
     if not init and wake_again:
         hello_again = HELLOS_D[
             "hello_again"
-        ]  # "我在呢，请问有什么可以帮忙的？"
+        ]
         tts_greeting(hello_again, xtts_sr=24000)
 
     if init and wake_gamgin():
         # responding the calling:
-        hello = HELLOS_D["say_hello"]  # "盆友，你好"
+        hello = HELLOS_D["say_hello"]
         tts_greeting(hello, xtts_sr=24000)
         init = 0
 
@@ -89,7 +89,7 @@ while True:
     say_goodbye = [w for w in EXIT_WORDS_L if w in speech2text]
     if len(say_goodbye) > 0:
         if make_bot_polite:
-            intext = GOODBYES_D["say_goodbye"]  # "盆友再见, 下次聊"
+            intext = GOODBYES_D["say_goodbye"]
             tts_greeting(intext, xtts_sr=24000)
 
         #  break  # 结束程序
