@@ -75,7 +75,9 @@ def speaker(
 
         pieces = []
         for sentence in tqdm(sentences):
-            inputs = processor(sentence, return_tensors="pt").to(device)
+            inputs = processor(
+                sentence, return_tensors="pt", voice_preset=voice_preset
+            ).to(device)
             audio_array = model.generate(**inputs, do_sample=True)
             pieces += [audio_array.cpu().numpy().squeeze(), silence.copy()]
         audio_array = np.concatenate(pieces)
