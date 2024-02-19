@@ -1,6 +1,7 @@
 """
 Optimizing Bark Using Transformers
 """
+
 import nltk
 import torch
 from transformers import AutoProcessor, AutoModel, BarkModel
@@ -8,7 +9,10 @@ from scipy.io.wavfile import write as write_wav
 from IPython.display import Audio
 import simpleaudio
 import numpy as np
-from sentence_spliter.logic_graph import long_short_cuter, simple_cuter
+from sentence_spliter.logic_graph import (
+    long_short_cuter,
+    simple_cuter,
+)  # V1.2.4; 依赖包 attrdict 过时，它的import需修改 collections -> collections.abc
 from sentence_spliter.automata.state_machine import StateMachine
 from sentence_spliter.automata.sequence import StrSequence
 from tqdm import tqdm
