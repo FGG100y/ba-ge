@@ -44,7 +44,7 @@ def tts_greeting(
             tts_hfopt_bark.speaker(
                 model=hf_bark,
                 processor=bark_processor,
-                prompt=greeting,
+                text_prompt=greeting,
                 save_wav=False,
             )
         else:
