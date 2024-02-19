@@ -177,3 +177,4 @@ flagged/
 # jupyter notebooks
 notebooks/
 *.ipynb
+*.zip
