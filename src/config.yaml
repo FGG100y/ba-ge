@@ -1,0 +1,25 @@
+---
+
+Maintainer: fang9guang@gmail.com
+
+llm_backups:
+  no_service: "无法连接到大模型服务，请稍后再试"
+
+tts_greetings:
+  hellos:
+    say_hello : "盆友，你好"
+    hello_again : "我在呢，请问有什么可以帮忙的？"
+  goodbyes: 
+    say_goodbye : "盆友再见, 下次聊"
+
+  exit_words: [
+    # 都是朋友时
+    "再见",
+    "再見",
+    "先这样",
+    "byebye",
+    # 惹人生气时
+    "滚蛋",
+    "跪安吧",
+    "退下吧",
+    ]
