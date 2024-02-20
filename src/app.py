@@ -9,8 +9,6 @@ from utils import load_yaml_cfg as yamlcfg
 init = 1
 wake_again = False
 
-# TODO test configuration 2024-02-18 Sun
-# preset tts greetings, goodbyes, exit-words
 preset_shorts = yamlcfg.load_config()
 EXIT_WORDS_L = preset_shorts["tts_greetings"]["exit_words"]
 HELLOS_D = preset_shorts["tts_greetings"]["hellos"]
@@ -70,9 +68,7 @@ while True:
     # PART01: wake word detection
 
     if not init and wake_again:
-        hello_again = HELLOS_D[
-            "hello_again"
-        ]
+        hello_again = HELLOS_D["hello_again"]
         tts_greeting(hello_again, xtts_sr=24000)
 
     if init and wake_gamgin():

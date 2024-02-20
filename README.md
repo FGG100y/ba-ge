@@ -11,9 +11,10 @@
 
 - 唤醒词：gamgin (为什么使用唤醒模式？唤醒词识别模型小，消耗不大）
 - STT: ASR模型 -- whishper-large/faster-whisper
-- LLM: mixtral-7x8b-instruct.gguf -- llama.cpp server
+- LLM: mixtral-7x8b-instruct/Yi-34b-chat.gguf -- llama.cpp server
 - TTS: coqui-ai xtts -- limited 82 chars (400 tokens) to zh-cn (FIXME)
-- TTS alternative: elevenlabs  -- 长度限制宽松的很，但尚未有汉语纯正口音
+- TTS alternative: elevenlabs  -- 长度限制&收费
+- TTS alternative: bark  -- 预训练模型；无长度限制，本机器算力不足
 
 
 # 主要功能：
@@ -34,8 +35,8 @@
     - [ ] 大模型快速回复（延迟合适）(需要更强计算能力支撑）
 
     - [ ] 少点废话小管家🐶
-        - [ ] 播放本地音乐
         - [ ] RAG -- 个人图书问答
+        - [ ] agent: 播放本地音乐
         - [ ] functional-calling -- 访问互联网
 
 - [ ] 干活小管家🐶
