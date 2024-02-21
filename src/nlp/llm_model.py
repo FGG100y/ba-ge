@@ -1,5 +1,5 @@
 """
-NOTE 将 mixtral 换为 yi-34b-chat/qwen-chat 等中文模型，对话质量才有保证
+NOTE 将 mixtral 换为 yi-34b-chat/qwen-chat 等中文模型，中文对话质量才有保证
 
 # In Linux CLI (on a remote server):
 ```sh
