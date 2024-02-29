@@ -38,7 +38,7 @@ client = openai.OpenAI(
 query = "你好! 请写出中国唐代诗人李白的《静夜思》全文，并给出合适的英文翻译"
 
 
-def query_llm(client=client, query=query, verbose=False):
+def run(client=client, query=query, verbose=False):
     print("Start querying LLM ...")
     completion = client.chat.completions.create(
         model="gpt-3.5-turbo",
@@ -58,4 +58,4 @@ def query_llm(client=client, query=query, verbose=False):
 
 
 if __name__ == "__main__":
-    query_llm(verbose=True)
+    run(verbose=True)
