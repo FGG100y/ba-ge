@@ -150,7 +150,7 @@ def load_and_process_document(file_path):
 
 
 # FIXME 这个做法占用显存，应该先完成文档embedding，然后再需要的时候直接检索
-def embed_documents(docs, modelPath="models/hfLLMs/jina-embeddings-v2-base-zh"):
+def embed_documents(docs, modelPath):
     """
     Embeds document chunks using OpenAI's embeddings.
     """
