@@ -58,7 +58,7 @@ else:
     )
 
 
-def run(query, vectordb, prompt=PROMPT):
+def create_llm_chain(vectordb, prompt=PROMPT):
     """
     Main function to run the modularized code.
     """
@@ -71,10 +71,7 @@ def run(query, vectordb, prompt=PROMPT):
         text_generation_pipeline, prompt, vectordb
     )
 
-    result_rag = llm_chain.invoke(query)
-    print("\n>>", query)
-    print(result_rag["result"], "\n")
-    breakpoint()
+    return llm_chain
 
 
 def load_model_and_tokenizer(model_name_or_path):
@@ -153,7 +150,7 @@ def load_and_process_document(file_path):
 
 
 # FIXME 这个做法占用显存，应该先完成文档embedding，然后再需要的时候直接检索
-def embed_documents(docs, language="en"):
+def embed_documents(docs):
     """
     Embeds document chunks using OpenAI's embeddings.
     """
@@ -198,7 +195,11 @@ def setup_retrieval_chain(text_generation_pipeline, prompt, vectordb):
 if __name__ == "__main__":
     #  docs = load_and_process_document("data/pdfs/en/llama2.pdf")
     docs = load_and_process_document("data/pdfs/zh/novel_最后一片藤叶.pdf")
-    vectordb = embed_documents(docs, language="zh")
+    vectordb = embed_documents(docs)
     question = "什么样的作品才能称为画家的杰作？"
 
-    run(query=question, vectordb=vectordb)
+    llm_chain = create_llm_chain(vectordb=vectordb)
+    result_rag = llm_chain.invoke(question)
+    print("\n>>", question)
+    print(result_rag["result"], "\n")
+    breakpoint()
