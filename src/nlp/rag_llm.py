@@ -18,46 +18,80 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 model_name_or_path = "models/hfLLMs/Qwen1.5-7B-Chat-GPTQ-Int4"
 #  model_name_or_path = "models/hfLLMs/Mistral-7B-Instruct-v0.2"
 
-persona = "东北著名狠人-范德彪"
-llama_template = """
-### [INST] Instruction: Answer the question based on your literature and art knowledge. Here is context to help, use it wisely:
-{context}
+apply_persona = True
+if apply_persona:
+    persona = "东北著名狠人-范德彪"
+    llama_template = """
+    ### [INST] Instruction: Answer the question based on your literature and art knowledge. Here is context to help, use it wisely:
+    {context}
 
-Respond in the persona of %s
+    Respond in the persona of %s
 
-### QUESTION:
-{question} [/INST]
-"""
+    ### QUESTION:
+    {question} [/INST]
+    """
+else:
+    llama_template = """
+    ### [INST] Instruction: Answer the question based on your literature and art knowledge. Here is context to help, use it wisely:
+    {context}
+
+    ### QUESTION:
+    {question} [/INST]
+    """
 
 # 2024-03-01 01:04 Fri
 # NOTE NOTE NOTE 使用如下的中文系统提示 (<|im_start|>system) 则模型无法进行角色扮演!
 #  你是人工智能助手，根据你对文学和艺术的知识进行问题回答或解释，不知道的就回答不知道，不要捏造假信息来回答。请合理利用以下的背景知识:
 #  尝试扮演 %s 这个人物性格来回答
-chatml_template = """
-<|im_start|>system
-Answer the question based on your literature and art knowledge. Here is context to help, use it wisely:
-{context}
+if apply_persona:
+    chatml_template = """
+    <|im_start|>system
+    Answer the question based on your literature and art knowledge. Here is context to help, use it wisely:
+    {context}
 
-Respond in the persona of %s
+    Respond in the persona of %s
 
-<|im_end|>
-<|im_start|>user
-{question}
-<|im_end|>
-<|im_start|>assistant
-"""
+    <|im_end|>
+    <|im_start|>user
+    {question}
+    <|im_end|>
+    <|im_start|>assistant
+    """
+else:
+    chatml_template = """
+    <|im_start|>system
+    Answer the question based on your literature and art knowledge. Here is context to help, use it wisely:
+    {context}
+    <|im_end|>
+    <|im_start|>user
+    {question}
+    <|im_end|>
+    <|im_start|>assistant
+    """
 
 using_chatml = True
 if using_chatml:
-    PROMPT = PromptTemplate(
-        template=chatml_template % (persona),
-        input_variables=["context", "question"],
-    )
+    if apply_persona:
+        PROMPT = PromptTemplate(
+            template=chatml_template % (persona),
+            input_variables=["context", "question"],
+        )
+    else:
+        PROMPT = PromptTemplate(
+            template=chatml_template,
+            input_variables=["context", "question"],
+        )
 else:
-    PROMPT = PromptTemplate(
-        template=llama_template % (persona),
-        input_variables=["context", "question"],
-    )
+    if apply_persona:
+        PROMPT = PromptTemplate(
+            template=llama_template % (persona),
+            input_variables=["context", "question"],
+        )
+    else:
+        PROMPT = PromptTemplate(
+            template=llama_template,
+            input_variables=["context", "question"],
+        )
 
 
 def create_llm_chain(vectordb, prompt=PROMPT):
