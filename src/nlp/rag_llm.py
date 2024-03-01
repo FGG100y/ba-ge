@@ -4,10 +4,12 @@ gpustat (peak usage):
 [0] NVIDIA GeForce RTX 4050 Laptop GPU | 54 ℃,  99 % |  5890 /  6141 MB | python3/148030(?M)
 
 """
+
 import torch
 from dotenv import load_dotenv
 from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
+
 #  from auto_gptq import exllama_set_max_input_length
 
 load_dotenv()
@@ -129,6 +131,7 @@ def create_text_generation_pipeline(model, tokenizer):
     return text_generation_pipeline
 
 
+# FIXME no good for chinese docs
 def load_and_process_document(file_path):
     """
     Loads and processes a document, returning a list of document chunks.
@@ -150,25 +153,20 @@ def load_and_process_document(file_path):
 
 
 # FIXME 这个做法占用显存，应该先完成文档embedding，然后再需要的时候直接检索
-def embed_documents(docs, modelPath):
+def embed_documents(docs, embedding_model):
     """
-    Embeds document chunks using OpenAI's embeddings.
-    """
-    from langchain_community.embeddings import HuggingFaceEmbeddings
+    Embeds document chunks using OpenAI's embeddings.  """
     from langchain_community.vectorstores import FAISS
 
     try:
-        embeddings = HuggingFaceEmbeddings(  # langchain wrapper
-            model_name=modelPath,
-        )
         # storing embeddings in the FAISS
-        vectordb = FAISS.from_documents(docs, embeddings)
-        vectordb.save_local('./data/vectordb/faiss_index')
+        vectordb = FAISS.from_documents(docs, embedding_model)
     except Exception as e:
         raise e
+    else:
+        vectordb.save_local("./data/vectordb/faiss_index")
 
     return vectordb
-
 
 def setup_retrieval_chain(text_generation_pipeline, prompt, vectordb):
     """
@@ -193,12 +191,15 @@ def setup_retrieval_chain(text_generation_pipeline, prompt, vectordb):
 
 
 if __name__ == "__main__":
+    from langchain_community.embeddings import HuggingFaceEmbeddings
+
     docs = load_and_process_document("data/pdfs/zh/novel_最后一片藤叶.pdf")
     question = "什么样的作品才能称为画家的杰作？"
     #  docs = load_and_process_document("data/pdfs/en/llama2.pdf")
     #  question = "how to train llama2 effectively?"
     #  embedding_model = "models/hfLLMs/jina-embeddings-v2-base-zh"
-    embedding_model = "models/hfLLMs/m3e-large"
+    embedding_model_name = "models/hfLLMs/m3e-large"
+    embedding_model = HuggingFaceEmbeddings(model_name=embedding_model_name)
     vectordb = embed_documents(docs, embedding_model)
 
     llm_chain = create_llm_chain(vectordb=vectordb)
