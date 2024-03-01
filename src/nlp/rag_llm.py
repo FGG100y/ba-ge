@@ -150,7 +150,7 @@ def load_and_process_document(file_path):
 
 
 # FIXME 这个做法占用显存，应该先完成文档embedding，然后再需要的时候直接检索
-def embed_documents(docs):
+def embed_documents(docs, modelPath="models/hfLLMs/jina-embeddings-v2-base-zh"):
     """
     Embeds document chunks using OpenAI's embeddings.
     """
@@ -158,12 +158,12 @@ def embed_documents(docs):
     from langchain_community.vectorstores import FAISS
 
     try:
-        modelPath = "models/hfLLMs/jina-embeddings-v2-base-zh"
         embeddings = HuggingFaceEmbeddings(  # langchain wrapper
             model_name=modelPath,
         )
         # storing embeddings in the FAISS
         vectordb = FAISS.from_documents(docs, embeddings)
+        vectordb.save_local('./data/vectordb/faiss_index')
     except Exception as e:
         raise e
 
@@ -193,10 +193,13 @@ def setup_retrieval_chain(text_generation_pipeline, prompt, vectordb):
 
 
 if __name__ == "__main__":
-    #  docs = load_and_process_document("data/pdfs/en/llama2.pdf")
     docs = load_and_process_document("data/pdfs/zh/novel_最后一片藤叶.pdf")
-    vectordb = embed_documents(docs)
     question = "什么样的作品才能称为画家的杰作？"
+    #  docs = load_and_process_document("data/pdfs/en/llama2.pdf")
+    #  question = "how to train llama2 effectively?"
+    #  embedding_model = "models/hfLLMs/jina-embeddings-v2-base-zh"
+    embedding_model = "models/hfLLMs/m3e-large"
+    vectordb = embed_documents(docs, embedding_model)
 
     llm_chain = create_llm_chain(vectordb=vectordb)
     result_rag = llm_chain.invoke(question)
