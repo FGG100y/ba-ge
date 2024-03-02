@@ -1,7 +1,11 @@
-"""voice chat with "blunt" LLMs 
+"""与大语言模型进行语音聊天
 
+voice chat with LLMs
 (due to limited computation resources, say 32G RAM and RXT4050 6G)
+NOTE faster-whisper-v3 + qwen-7b-chat-gptq-int4 --> GPU OOM error for a second round
+
 """
+
 import openai
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings
@@ -19,35 +23,23 @@ GOODBYES_D = preset_shorts["tts_greetings"]["goodbyes"]
 LLM_BACKUPS_D = preset_shorts["llm_backups"]
 
 # TTS models:
-make_bot_polite = True
-# use coqui-ai xtts, limited to 72 chars for language='zh'
-XTTS_MODEL, CONFIG = tts_model.load_xtts_model()  # CPU only ok
-# use suno-bark from huggingface transformers, No TTS length limited
-hf_bark, bark_processor = tts_hfopt_bark.load_bark_model()
+# use coqui-ai xtts
+XTTS_MODEL, CONFIG = tts_model.load_xtts_model()  # CPU is ok
+
+# use suno-bark from hf-transformers, No length limited (but not so good for zh)
+#  hf_bark, bark_processor = tts_hfopt_bark.load_bark_model()
 
 # STT models:
 faster_whisper = stt_model.load_faster_whisper()
-
-# LOCAL LLMs: embedding model and chat model
-embedding_model_name = "models/hfLLMs/m3e-large"
-embedding_model = HuggingFaceEmbeddings(model_name=embedding_model_name)
-try:
-    vectordb = FAISS.load_local("./data/vectordb/faiss_index", embedding_model)
-except Exception:
-    print("No local faiss index found. Create one now.")
-    docs = rag_llm.load_and_process_document(
-        "data/pdfs/zh/novel_最后一片藤叶.pdf"
-    )
-    vectordb = rag_llm.embed_documents(docs, embedding_model)
-llm_chain = rag_llm.create_llm_chain(vectordb)
 
 
 def main(verbose=False):
     init = 1
     wake_again = False
+    init_local_llm = 1
 
     while True:
-        # PART01: wake word detection
+        # PART01: wake word detection -------------------------------------------------
 
         if not init and wake_again:
             hello_again = HELLOS_D["hello_again"]
@@ -59,16 +51,15 @@ def main(verbose=False):
             tts_greeting(hello, use_bark=False, xtts_sr=24000)
             init = 0
 
-        # PART02: speech2text (faster-whisper-large), input and transcribe
+        # PART02: speech2text (faster-whisper-large), input and transcribe ------------
         speech2text = stt_model.transcribe_fast(
             model=faster_whisper, duration=50, verbose=1
         )
 
         say_goodbye = [w for w in EXIT_WORDS_L if w in speech2text]
         if len(say_goodbye) > 0:
-            if make_bot_polite:
-                intext = GOODBYES_D["say_goodbye"]
-                tts_greeting(intext, use_bark=False, xtts_sr=24000)
+            intext = GOODBYES_D["say_goodbye"]
+            tts_greeting(intext, use_bark=False, xtts_sr=24000)
 
             #  break  # 结束程序 (DEBUG only)
 
@@ -80,45 +71,53 @@ def main(verbose=False):
         # PART03: query the LLMs ------------------------------------------------------
 
         prompt = speech2text
-        #  (coqui-tts limit) response lenght < 72 chars :
-        #  prompt = speech2text + " 请简答，并且字数少于72个。"
-        # NOTE 使用 Bark-STT 部分解决了这个问题（但速度成了另一个问题）
 
         try:  # the BIGGER LLM on server first:
             llm_response = llm_model.run(query=prompt, verbose=True)
-            use_bark = True
         except (ConnectionRefusedError, openai.APIConnectionError):
+            if init and init_local_llm:
+                # LOCAL LLMs: embedding model and chat model
+                embedding_model_name = "models/hfLLMs/m3e-large"
+                embedding_model = HuggingFaceEmbeddings(
+                    model_name=embedding_model_name
+                )
+                try:
+                    vectordb = FAISS.load_local(
+                        "./data/vectordb/faiss_index", embedding_model
+                    )
+                except Exception:
+                    print("No local faiss index found. Create one now.")
+                    docs = rag_llm.load_and_process_document(
+                        "data/pdfs/zh/novel_最后一片藤叶.pdf"  # FIXME later
+                    )
+                    vectordb = rag_llm.embed_documents(docs, embedding_model)
+                llm_chain = rag_llm.create_llm_chain(vectordb)
+                init_local_llm = 0
+
             try:  # the smaller LLM locally:
                 llm_response = llm_chain.invoke(prompt)["result"]
                 if verbose:  # working as expected 2024-01-19
                     print("usr:", prompt)
                     print("bot:", llm_response)
-                use_bark = True
             except Exception as e:
                 print(e)
                 llm_response = LLM_BACKUPS_D[
                     "no_service"
                 ]  # "无法连接到大模型服务，请稍后再试"
-                use_bark = False
 
-        # PART04: TTS of LLM result
-        tts_greeting(llm_response, use_bark=use_bark, xtts_sr=24000)
-
-        #  if no_llm:
-        #      tts_greeting(llm_response, use_bark=False, xtts_sr=24000)
-        #  else:
-        #      # Bark model not work well on long text prompts,
-        #      # TODO solution: split long text into sentences:
-        #      # see https://github.com/suno-ai/bark/blob/main/notebooks/long_form_generation.ipynb
-        #      tts_greeting(llm_response, use_bark=True, xtts_sr=24000)
+        # PART04: TTS of LLM result ---------------------------------------------------
+        try:
+            tts_greeting(llm_response, use_bark=False, xtts_sr=24000)
+        except Exception as e:
+            raise e
 
 
 def tts_greeting(
     greeting,
-    use_bark=True,
+    use_bark=False,
     use_hf_bark=True,
-    use_11labs=False,
-    use_gtts=False,
+    use_11labs=False,  # backup
+    use_gtts=False,  # backup
     xtts_sr=16000,
 ):
     if use_bark:
@@ -138,7 +137,7 @@ def tts_greeting(
         )
     elif use_gtts:  # FIXME gtts not work (mainly) due to network issues
         tts_model.googletts_speaker(greeting, lang="zh-CN")
-    else:  # only 82 chars for 'zh'
+    else:  # only 82 chars for 'zh' at a time
         tts_model.coquitts_speaker(
             model=XTTS_MODEL,
             config=CONFIG,

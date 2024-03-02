@@ -60,13 +60,13 @@ def speaker(
 
     sample_rate = model.generation_config.sample_rate
     silence = np.zeros(int(0.25 * sample_rate))  # quarter second of silence
-    if len(text_prompt) > 30:  # Long sentences need to split first
+    if len(text_prompt) > 80:  # Long sentences need to split first
         if "en_speaker" in voice_preset:
             sentences = nltk.sent_tokenize(text_prompt)
         elif "zh_speaker" in voice_preset:
             if not simple_cut:
                 cuter = StateMachine(
-                    long_short_cuter(hard_max=128, max_len=128, min_len=15)
+                    long_short_cuter(hard_max=16, max_len=64, min_len=8)
                 )
             else:  # use simple_cuter
                 cuter = StateMachine(simple_cuter())

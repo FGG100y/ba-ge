@@ -31,7 +31,7 @@ from pygame import mixer  # noqa
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 # GPU: `nvcc --version` must match `torch.__version__`
-use_deepspeed = False
+use_deepspeed = False  # due to faster-whisper are gpu priority 
 if not use_deepspeed:
     device = "cpu"  # CPU only; works ok
 
@@ -69,14 +69,14 @@ def coquitts_speaker(
     save_wav=False,
 ):
     # Long sentences need to split first
-    if len(intext) > 30:  # FIXME magic number
+    if len(intext) > 80:  # FIXME magic number (coqui-xtts zh-cn limit)
         if "en" in language:
             sentences = nltk.sent_tokenize(intext)
         elif "zh" in language:
             if not simple_cut:
                 cuter = StateMachine(
                     #  long_short_cuter()  # not so good
-                    long_short_cuter(hard_max=80, max_len=80, min_len=15)
+                    long_short_cuter(hard_max=16, max_len=64, min_len=8)
                 )
             else:  # use simple_cuter
                 cuter = StateMachine(simple_cuter())
@@ -88,7 +88,7 @@ def coquitts_speaker(
                 text=sentence,
                 config=config,
                 speaker_wav=speaker_wav,
-                gpt_cond_len=10,
+                gpt_cond_len=6,  # they train model with 6s
                 language=language,
             )
             pieces += [outputs["wav"]]
