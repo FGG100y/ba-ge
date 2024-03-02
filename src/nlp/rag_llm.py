@@ -18,7 +18,8 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 model_name_or_path = "models/hfLLMs/Qwen1.5-7B-Chat-GPTQ-Int4"
 #  model_name_or_path = "models/hfLLMs/Mistral-7B-Instruct-v0.2"
 
-apply_persona = True
+apply_persona = False
+#  apply_persona = True
 if apply_persona:
     persona = "东北著名狠人-范德彪"
     llama_template = """
