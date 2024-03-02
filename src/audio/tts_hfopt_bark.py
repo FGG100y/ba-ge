@@ -52,11 +52,11 @@ def speaker(
     model,
     processor,
     text_prompt,
-    voice_preset="v2/zh_speaker_4",
+    voice_preset="v2/zh_speaker_4",  # [0,9]; 4,6,7,9 -> female, others -> male
     simple_cut=True,
     save_wav=False,
 ):
-    """Bark TTS (it even can sing :) NOTE 但表现不稳定，需要fine-tuning"""
+    """Bark TTS (it even can sing :) BUT 表现不稳定，需要fine-tuning"""
 
     sample_rate = model.generation_config.sample_rate
     silence = np.zeros(int(0.25 * sample_rate))  # quarter second of silence
@@ -125,7 +125,7 @@ if __name__ == "__main__":
         非人间的浓黑的悲凉；以我的最大哀痛显示于非人间，使它们快意于我的苦痛，
         就将这作为后死者的菲薄的祭品，奉献于逝者的灵前。真的猛士，敢于直面惨淡
         的人生，敢于正视淋漓的鲜血。"""
-        text_prompt_sing = "♪ 黄四娘家花满溪，千朵万朵压枝低 ♪"
+        text_prompt_sing = "♪黄四娘家花满溪，千朵万朵压枝低 ♪"
     else:
         voice_preset = "v2/en_speaker_6"
         text_prompt = "Hello, my dog is cute"
