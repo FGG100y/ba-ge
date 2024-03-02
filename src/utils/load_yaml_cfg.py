@@ -9,6 +9,8 @@ CFGFILE = pathlib.Path("./src/config.yaml")
 
 
 def load_config():
+    """load file ./src/config.yaml
+    """
     try:
         # using 'rb' mode to avoid UnicodeDecodeError
         # such as 'gbk' codec can't decode 中文字符
