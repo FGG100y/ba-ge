@@ -27,7 +27,9 @@ when the LLM is on a remote server:
     run2: `python3 src/nlp/llm_model.py`
 
 """
+import asyncio
 import openai
+from audio.utils.greeting import tts_greeting
 
 
 client = openai.OpenAI(
@@ -39,46 +41,100 @@ query = "你好! 请写出中国唐代诗人杜甫的关于茅草屋被秋风吹
 query = "你好! 请写出中国唐代诗人李白的《静夜思》全文，并给出合适的英文翻译"
 
 
-def run(client=client, query=query, streaming=True, verbose=False):
-    print("Start querying LLM ...")
-    if streaming:
-        completion = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            #  model="mixtralMoE",  # also work like this.
-            messages=[
-                #  {"role": "system", "content": ""},  # mixtralMoE not support it
-                {"role": "user", "content": query},
-            ],
-            stream=True,
-        )
+#  async def producer(queue):
+#      for _ in range(10):
+#          sleep_time = random.randint(1, 2)
+#          await queue.put(sleep_time)
+#
+#
+#  async def consumer(queue):
+#      while True:
+#          sleep_time = await queue.get()
+#          size = queue.qsize()
+#          print(f'当前队列有：{size} 个元素')
+#          url = f'http://httpbin.org/delay/{sleep_time}'
+#          async with aiohttp.ClientSession() as client:
+#              resp = await client.get(url)
+#              print(await resp.json())
+#
+#  async def main():
+#      queue = asyncio.Queue()
+#      asyncio.create_task(producer(queue))
+#      con = asyncio.create_task(consumer(queue))
+#      await con
+#
+#
+#  asyncio.run(main())
 
-        #  if streaming:  # working as expected 2024-01-19
-        print("usr:", query)
+
+async def arun(client=client, query=query, verbose=False):
+    print("Start querying LLM ...")
+
+    queue = asyncio.Queue(maxsize=1)
+
+    async def producer(q):
         response = ""
         for chunk in completion:
             text = chunk.choices[0].delta.content
             response += text if text else ""
-            print(text, end="", flush=True)
-    else:
-        completion = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            #  model="mixtralMoE",  # also work like this.
-            messages=[
-                #  {"role": "system", "content": ""},  # mixtralMoE not support it
-                {"role": "user", "content": query},
-            ]
-        )
+            if verbose:
+                print(text, end="", flush=True)
+            if text[-1] in [".", "?", "。", "？"]:
+                #  print(f"put into queue: {response}")
+                await q.put(response)
+                response = ""
+                #  await q.put(text)
 
-        response = completion.choices[0].message.content
-        if verbose:  # working as expected 2024-01-19
-            print("usr:", query)
-            print("bot:", response)
+    async def consumer(q):
+        while True:
+            response = await q.get()
+            tts_greeting(response, use_bark=False, xtts_sr=24000)
 
-    return response
+
+    completion = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        #  model="mixtralMoE",  # also work like this.
+        messages=[
+            #  {"role": "system", "content": ""},  # mixtralMoE not support it
+            {"role": "user", "content": query},
+        ],
+        stream=True,
+    )
+
+    asyncio.create_task(producer(queue))
+    con = asyncio.create_task(consumer(queue))
+    await con
+    #  response = ""
+    #  for chunk in completion:
+    #      text = chunk.choices[0].delta.content
+    #      response += text if text else ""
+    #      print(text, end="", flush=True)
+
+
+def run(client=client, query=query, verbose=False):
+    print("Start querying LLM ...")
+    completion = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        #  model="mixtralMoE",  # also work like this.
+        messages=[
+            #  {"role": "system", "content": ""},  # mixtralMoE not support it
+            {"role": "user", "content": query},
+        ]
+    )
+
+    response = completion.choices[0].message.content
+    if verbose:  # working as expected 2024-01-19
+        print("user:", query)
+        print("bot:", response)
+
+    tts_greeting(response, use_bark=False, xtts_sr=24000)
+    #  return response
 
 
 if __name__ == "__main__":
+
     streaming = True
-    txts = run(verbose=False, streaming=streaming)
-    if not streaming:
-        print(txts)
+    if streaming:
+        asyncio.run(arun())
+    else:
+        txts = run(verbose=False)

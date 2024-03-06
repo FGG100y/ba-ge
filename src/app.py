@@ -5,7 +5,7 @@ voice chat with LLMs
 NOTE faster-whisper-v3 + qwen-7b-chat-gptq-int4 --> GPU OOM error for a second round
 
 """
-
+import asyncio
 import openai
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings
@@ -71,7 +71,8 @@ def main(verbose=False):
         prompt = speech2text
 
         try:  # the BIGGER LLM on server first:
-            llm_response = llm_model.run(query=prompt, streaming=True)
+            asyncio.run(llm_model.arun(query=prompt, verbose=True))
+            #  llm_model.run(query=prompt, verbose=True)
             init_local_llm = 0  # if server is fine, do not init local llm
         except (ConnectionRefusedError, openai.APIConnectionError):
             #  if init and init_local_llm:
