@@ -35,27 +35,50 @@ client = openai.OpenAI(
     api_key="sk-no-key-required"
 )
 
+query = "你好! 请写出中国唐代诗人杜甫的关于茅草屋被秋风吹破的诗歌，并给出合适的英文翻译"
 query = "你好! 请写出中国唐代诗人李白的《静夜思》全文，并给出合适的英文翻译"
 
 
-def run(client=client, query=query, verbose=False):
+def run(client=client, query=query, streaming=True, verbose=False):
     print("Start querying LLM ...")
-    completion = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        #  model="mixtralMoE",  # also work like this.
-        messages=[
-            #  {"role": "system", "content": ""},  # mixtralMoE not support it
-            {"role": "user", "content": query},
-        ]
-    )
+    if streaming:
+        completion = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            #  model="mixtralMoE",  # also work like this.
+            messages=[
+                #  {"role": "system", "content": ""},  # mixtralMoE not support it
+                {"role": "user", "content": query},
+            ],
+            stream=True,
+        )
 
-    response = completion.choices[0].message.content
-    if verbose:  # working as expected 2024-01-19
+        #  if streaming:  # working as expected 2024-01-19
         print("usr:", query)
-        print("bot:", response)
+        response = ""
+        for chunk in completion:
+            text = chunk.choices[0].delta.content
+            response += text if text else ""
+            print(text, end="", flush=True)
+    else:
+        completion = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            #  model="mixtralMoE",  # also work like this.
+            messages=[
+                #  {"role": "system", "content": ""},  # mixtralMoE not support it
+                {"role": "user", "content": query},
+            ]
+        )
+
+        response = completion.choices[0].message.content
+        if verbose:  # working as expected 2024-01-19
+            print("usr:", query)
+            print("bot:", response)
 
     return response
 
 
 if __name__ == "__main__":
-    run(verbose=True)
+    streaming = True
+    txts = run(verbose=False, streaming=streaming)
+    if not streaming:
+        print(txts)

@@ -73,7 +73,7 @@ def main(verbose=False):
         prompt = speech2text
 
         try:  # the BIGGER LLM on server first:
-            llm_response = llm_model.run(query=prompt, verbose=True)
+            llm_response = llm_model.run(query=prompt, streaming=True)
         except (ConnectionRefusedError, openai.APIConnectionError):
             if init and init_local_llm:
                 # LOCAL LLMs: embedding model and chat model
