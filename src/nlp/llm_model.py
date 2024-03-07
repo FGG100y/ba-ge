@@ -40,57 +40,15 @@ client = openai.OpenAI(
 query = "你好! 请写出中国唐代诗人杜甫的关于茅草屋被秋风吹破的诗歌，并给出合适的英文翻译"
 query = "你好! 请写出中国唐代诗人李白的《静夜思》全文，并给出合适的英文翻译"
 
-
-#  async def producer(queue):
-#      for _ in range(10):
-#          sleep_time = random.randint(1, 2)
-#          await queue.put(sleep_time)
-#
-#
-#  async def consumer(queue):
-#      while True:
-#          sleep_time = await queue.get()
-#          size = queue.qsize()
-#          print(f'当前队列有：{size} 个元素')
-#          url = f'http://httpbin.org/delay/{sleep_time}'
-#          async with aiohttp.ClientSession() as client:
-#              resp = await client.get(url)
-#              print(await resp.json())
-#
-#  async def main():
-#      queue = asyncio.Queue()
-#      asyncio.create_task(producer(queue))
-#      con = asyncio.create_task(consumer(queue))
-#      await con
-#
-#
-#  asyncio.run(main())
+query = "who is the author of The Lord of the Ring?"
 
 
 async def arun(client=client, query=query, verbose=False):
     print("Start querying LLM ...")
 
-    queue = asyncio.Queue(maxsize=1)
+    queue = asyncio.Queue(maxsize=2)
 
-    async def producer(q):
-        response = ""
-        for chunk in completion:
-            text = chunk.choices[0].delta.content
-            response += text if text else ""
-            if verbose:
-                print(text, end="", flush=True)
-            if text[-1] in [".", "?", "。", "？"]:
-                #  print(f"put into queue: {response}")
-                await q.put(response)
-                response = ""
-                #  await q.put(text)
-
-    async def consumer(q):
-        while True:
-            response = await q.get()
-            tts_greeting(response, use_bark=False, xtts_sr=24000)
-
-
+    # get completions from LLMs:
     completion = client.chat.completions.create(
         model="gpt-3.5-turbo",
         #  model="mixtralMoE",  # also work like this.
@@ -101,14 +59,41 @@ async def arun(client=client, query=query, verbose=False):
         stream=True,
     )
 
-    asyncio.create_task(producer(queue))
-    con = asyncio.create_task(consumer(queue))
-    await con
-    #  response = ""
-    #  for chunk in completion:
-    #      text = chunk.choices[0].delta.content
-    #      response += text if text else ""
-    #      print(text, end="", flush=True)
+    asyncio.create_task(producer(queue, completion))
+    consumer_task = asyncio.create_task(consumer(queue))
+    await consumer_task
+
+
+async def producer(q, completion, verbose=True):
+    response = ""
+    for chunk in completion:
+        text = chunk.choices[0].delta.content
+        if text is None:
+            continue
+        response += text if text else ""
+        if verbose:
+            print(text, end="", flush=True)
+
+        # FIXME this is way too dummy conditions: (5/7 quatrains)
+        if len(response) >= 12 and text[-1] in ["\n", ".", "。"]:  # , "?", "？"]:
+            #  print(f"\n>>>put into queue: {response}\n")  # debugging only
+            await q.put(response)
+            response = ""  # reset the sentence. ortherwise it grow on and on
+
+    # indicate the producer is done
+    await q.put(None)
+
+
+async def consumer(q):
+    while True:
+        response = await q.get()
+        if response is None:
+            break
+        #  print(f"\n<<<get from queue: {response}\n")
+        tts_greeting(response, use_bark=False, xtts_sr=24000)
+
+        # notify the queue that the item has been processed
+        q.task_done()
 
 
 def run(client=client, query=query, verbose=False):
@@ -137,4 +122,6 @@ if __name__ == "__main__":
     if streaming:
         asyncio.run(arun())
     else:
-        txts = run(verbose=False)
+        txts = run(verbose=True)
+
+    breakpoint()
