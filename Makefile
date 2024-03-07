@@ -20,15 +20,14 @@ export PYTHONBREAKPOINT = IPython.core.debugger.set_trace
 USING_PYENV := true
 WORK_OS_UNIX := true
 RUN_IN_DOCKER := false
-# LOCAL_NETWORK := false
 
-# Virtual Environment directory name in the Container
-# Keep consist to VIRTUAL_ENV=/opt/venv in Dockerfile
-ifeq ($(RUN_IN_DOCKER),true)
-	VENV := /opt/venv
-endif
-INSTALL_STAMP := $(VENV)/.install.stamp
-# INSTALL_STAMP as the indicator file for updated status
+# # Virtual Environment directory name in the Container
+# # Keep consist to VIRTUAL_ENV=/opt/venv in Dockerfile
+# ifeq ($(RUN_IN_DOCKER),true)
+#     VENV := /opt/venv
+# endif
+# INSTALL_STAMP := $(VENV)/.install.stamp
+# # INSTALL_STAMP as the indicator file for updated status
 
 ifeq ($(WORK_OS_UNIX),true)
 	PY3 := $(shell command -v python3 2> /dev/null)
@@ -60,11 +59,6 @@ $(INSTALL_STAMP): $(PYTHON) requirements.txt
 $(PYTHON):
 	@if [ -z $(PY3) ]; then echo "python3 could not be found."; exit 2; fi
 	$(PY3) -m venv $(VENV)
-
-# GDALCFG := $(shell command -v gdal-config 2> /dev/null)
-# $(GDAL):
-#     @if [ -z $(GDALCFG) ]; then echo "gdal-config could not be found. Try: apt install libgdal-dev"; exit 2; fi
-#     apt install -y libgdal-dev
 
 # # $(warning now reached end of ifeq, PY3=$(PY3))
 
@@ -104,9 +98,9 @@ harmony:
 wakeup:
 	$(PYTHON) src/wake_word/wake_gamgin_stream.py
 
-.PHONY: query_LLM
-## Query the LLM
-query_LLM:
+.PHONY: query_llm
+## Query the llm
+query_llm:
 	$(PYTHON) src/nlp/llm_model.py
 
 # .PHONY: stt_whisper_sr
@@ -125,8 +119,6 @@ stt_whisper_webui:
 	streamlit run src/audio/stream_webrtc_stt_whisper.py
 
 
-# 数据库访问密码的加密；
-# 重要：不清楚此模块的，请先阅读此模块
 # .PHONY: generate_kek
 # KEK of dbaccessing
 # generate_kek:
