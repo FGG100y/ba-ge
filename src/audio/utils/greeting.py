@@ -8,6 +8,7 @@ XTTS_MODEL, CONFIG = tts_model.load_xtts_model()  # CPU is ok
 
 
 
+# TODO language auto detection
 def tts_greeting(
     greeting,
     use_bark=False,
@@ -15,6 +16,7 @@ def tts_greeting(
     use_11labs=False,  # backup
     use_gtts=False,  # backup
     xtts_sr=16000,
+    language="zh-cn",
 ):
     if use_bark:
         if use_hf_bark:  # from transformers 4.31 onward
@@ -39,6 +41,6 @@ def tts_greeting(
             config=CONFIG,
             intext=greeting,
             sr=xtts_sr,
-            language="zh-cn",
+            language=language,
             save_wav=False,
         )

@@ -71,7 +71,7 @@ def main(verbose=False):
         prompt = speech2text
 
         try:  # the BIGGER LLM on server first:
-            asyncio.run(llm_model.arun(query=prompt, verbose=True))
+            asyncio.run(llm_model.arun(query=prompt, language=LANGUAGE, verbose=True))
             #  llm_model.run(query=prompt, verbose=True)
             init_local_llm = 0  # if server is fine, do not init local llm
         except (ConnectionRefusedError, openai.APIConnectionError):
@@ -114,4 +114,5 @@ def main(verbose=False):
 
 
 if __name__ == "__main__":
+    LANGUAGE = "zh-cn"
     main(verbose=True)

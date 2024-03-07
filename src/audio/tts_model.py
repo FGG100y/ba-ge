@@ -30,10 +30,11 @@ from pygame import mixer  # noqa
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
-# GPU: `nvcc --version` must match `torch.__version__`
-use_deepspeed = False  # due to faster-whisper are gpu priority 
+#  use_deepspeed = True
+use_deepspeed = False
 if not use_deepspeed:
     device = "cpu"  # CPU only; works ok
+# NOTE that when using GPU: `nvcc --version` must match `torch.__version__`
 
 # for voice clone:
 speaker_wav = "./data/wavs/LJ001-0001.wav"
@@ -56,7 +57,6 @@ def load_xtts_model():
 
     print("Loading XTTS from: ", checkpoint_dir)
     return model, config
-
 
 # NOTE max chars of 82 limited in language "zh":
 def coquitts_speaker(

@@ -37,13 +37,8 @@ client = openai.OpenAI(
     api_key="sk-no-key-required"
 )
 
-query = "你好! 请写出中国唐代诗人杜甫的关于茅草屋被秋风吹破的诗歌，并给出合适的英文翻译"
-query = "你好! 请写出中国唐代诗人李白的《静夜思》全文，并给出合适的英文翻译"
 
-query = "who is the author of The Lord of the Ring?"
-
-
-async def arun(client=client, query=query, verbose=False):
+async def arun(query, language, client=client, verbose=False):
     print("Start querying LLM ...")
 
     queue = asyncio.Queue(maxsize=2)
@@ -60,7 +55,7 @@ async def arun(client=client, query=query, verbose=False):
     )
 
     asyncio.create_task(producer(queue, completion))
-    consumer_task = asyncio.create_task(consumer(queue))
+    consumer_task = asyncio.create_task(consumer(queue, language))
     await consumer_task
 
 
@@ -76,7 +71,6 @@ async def producer(q, completion, verbose=True):
 
         # FIXME this is way too dummy conditions: (5/7 quatrains)
         if len(response) >= 12 and text[-1] in ["\n", ".", "。"]:  # , "?", "？"]:
-            #  print(f"\n>>>put into queue: {response}\n")  # debugging only
             await q.put(response)
             response = ""  # reset the sentence. ortherwise it grow on and on
 
@@ -84,19 +78,18 @@ async def producer(q, completion, verbose=True):
     await q.put(None)
 
 
-async def consumer(q):
+async def consumer(q, language):
     while True:
         response = await q.get()
         if response is None:
             break
-        #  print(f"\n<<<get from queue: {response}\n")
-        tts_greeting(response, use_bark=False, xtts_sr=24000)
+        tts_greeting(response, use_bark=False, xtts_sr=24000, language=language)
 
         # notify the queue that the item has been processed
         q.task_done()
 
 
-def run(client=client, query=query, verbose=False):
+def run(query, client=client, verbose=False):
     print("Start querying LLM ...")
     completion = client.chat.completions.create(
         model="gpt-3.5-turbo",
@@ -118,10 +111,17 @@ def run(client=client, query=query, verbose=False):
 
 if __name__ == "__main__":
 
+    query = "你好! 请写出中国唐代诗人杜甫的关于茅草屋被秋风吹破的诗歌，并给出合适的英文翻译"
+    query = "你好! 请写出中国唐代诗人李白的《静夜思》全文，并给出合适的英文翻译"
+    LANGUAGE = "zh-cn"
+
+    query = "who is the author of The Lord of the Ring?"
+    LANGUAGE = "en"
+
     streaming = True
     if streaming:
-        asyncio.run(arun())
+        asyncio.run(arun(query))
     else:
-        txts = run(verbose=True)
+        txts = run(query, verbose=True)
 
     breakpoint()
