@@ -57,24 +57,30 @@
         - 目前：coquiai-xtts分治法解决长度限制问题（你最好有一台好机器，或者好脾气）（极可折腾）
 
     - [ ] 音调、音色克隆 (洋金坚 -- 口音问题)
-        - 解决思路：更好的中文演讲者音频文件
+        - 本质仍是seq2seq的二阶段Finetuning问题
+        - 解决思路：更好的中文演讲者音频文件进行微调
 
     - [ ] 大模型回复（延迟一般）
         - [x] 使用 stream=True 模式，缓解等待焦虑
         - [x] Mixtral-MoE/Yi-34b-chat.gguf 服务器最好有个24G显卡
         - [x] 本地部署更小参数量的模型 Qwen/chatglm)
-        - [ ] tensorRT-llm triton server
+        - [ ] network-pruning / distill models
+        - [ ] (尝试) tensorRT-llm triton server
 
     - [ ] 少点废话小管家🐶
         - [ ] LLM 提示工程
             - [ ] Naive RAG -- 讲个笑话乐呵乐呵啥的
-                - 大模型拒绝讲成人笑话，作为一个工具它似乎很正经😂
+                - 大模型拒绝讲某些笑话，作为一个工具它似乎很正经😂
                 - 解决方案：uncensored-llm
             - [x] Naive RAG -- 朴素检索增强个人资料问答
                 - [x] pdfs (unstructuredio 提供的工具需要更多算力 😂)
                 - [x] txts (长文本断句需要改进)
+                - [ ] 为什么用 m3e-embedding 生成嵌入向量
+            - [ ] RAG的召回排序/打分
+                - [ ] 多路召回混合排序 (Reciprocal Rank Fusion, RRF)
+                - [ ] quietnight/bge-reranker-large
             - [x] 使用内存向量 (numpy array, FAISS)
-                - [x] FAISS
+                - [x] FAISS: 支持增量构建模式（train,add）（索引算法：暴力检索、乘积量化、局部敏感哈希和基于图的方法等）
                 - [ ] vectordb (pgvertor)
         - [ ] LLM 智能代理
             - [ ] functional-calling -- 使用api工具访问互联网
