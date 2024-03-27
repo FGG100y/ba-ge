@@ -109,7 +109,9 @@ def get_raw_elements(filename):
 if __name__ == "__main__":
     #  os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
 
-    directory_path = "data/pdfs/en"
+    directory_path = "data/pdfs/zh"
     docs, tables = load_and_split(directory_path)
+    breakpoint()
     # docs -> List; docs[0][0] -> Element Obj
     print(docs[0][0].text)  # -> str
+    breakpoint()

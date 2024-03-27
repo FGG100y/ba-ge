@@ -95,6 +95,7 @@ else:
         )
 
 
+# TODO add streaming mode (https://github.com/langchain-ai/langchain/issues/2918)
 def create_llm_chain(vectordb, prompt=PROMPT):
     """
     Main function to run the modularized code.
@@ -174,13 +175,17 @@ def load_and_process_document(file_path):
     from langchain_community.document_loaders import PyPDFLoader
     from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-    loader = PyPDFLoader(file_path)
-    pages = loader.load_and_split()
+    if language == "en":
+        loader = PyPDFLoader(file_path)
+        pages = loader.load_and_split()
+    elif language == "zh":
+        # TODO load zh pdfs using nlp_utils .unstructrue and .zh_sentence_split
+        breakpoint()
 
     text_splitter = RecursiveCharacterTextSplitter(
         # hyper-parameters
-        chunk_size=500,
-        chunk_overlap=50,
+        chunk_size=50,
+        chunk_overlap=10,
     )
     docs = text_splitter.split_documents(pages)
 
@@ -228,10 +233,13 @@ if __name__ == "__main__":
     from langchain_community.embeddings import HuggingFaceEmbeddings
 
     docs = load_and_process_document("data/pdfs/zh/novel_最后一片藤叶.pdf")
+    breakpoint()
     question = "什么样的作品才能称为画家的杰作？"
+
     #  docs = load_and_process_document("data/pdfs/en/llama2.pdf")
+    #  breakpoint()
     #  question = "how to train llama2 effectively?"
-    #  embedding_model = "models/hfLLMs/jina-embeddings-v2-base-zh"
+
     embedding_model_name = "models/hfLLMs/m3e-large"
     embedding_model = HuggingFaceEmbeddings(model_name=embedding_model_name)
     vectordb = embed_documents(docs, embedding_model)

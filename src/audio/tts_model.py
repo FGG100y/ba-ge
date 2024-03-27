@@ -15,15 +15,10 @@ from gtts import gTTS  # text to speech via google
 from IPython.display import Audio
 from TTS.tts.configs.xtts_config import XttsConfig
 from TTS.tts.models.xtts import Xtts
-from sentence_spliter.logic_graph import (
-    long_short_cuter,
-    simple_cuter,
-)  # V1.2.4; 依赖包 attrdict 过时，它的import需修改 collections -> collections.abc
-from sentence_spliter.automata.state_machine import StateMachine
-from sentence_spliter.automata.sequence import StrSequence
 from tqdm import tqdm
 
 import os
+from nlp.nlp_utils import zh_sentence_split as utlis_split
 
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 from pygame import mixer  # noqa
@@ -73,15 +68,7 @@ def coquitts_speaker(
         if "en" in language:
             sentences = nltk.sent_tokenize(intext)
         elif "zh" in language:
-            if not simple_cut:
-                cuter = StateMachine(
-                    #  long_short_cuter()  # not so good
-                    long_short_cuter(hard_max=16, max_len=64, min_len=8)
-                )
-            else:  # use simple_cuter
-                cuter = StateMachine(simple_cuter())
-            sequence = cuter.run(StrSequence(intext))
-            sentences = sequence.sentence_list()
+            sentences = utlis_split.sent_tokenize_zh(intext)
         pieces = []
         for sentence in tqdm(sentences):
             outputs = model.synthesize(
