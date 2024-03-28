@@ -7,8 +7,8 @@ gpustat (peak usage):
 
 import torch
 from dotenv import load_dotenv
-from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
+from langchain.prompts import PromptTemplate
 
 #  from auto_gptq import exllama_set_max_input_length
 
@@ -116,11 +116,8 @@ def load_model_and_tokenizer(model_name_or_path):
     """
     Loads the model and tokenizer for text generation.
     """
-    from transformers import (
-        AutoTokenizer,
-        AutoModelForCausalLM,
-        BitsAndBytesConfig,
-    )
+    from transformers import (AutoModelForCausalLM, AutoTokenizer,
+                              BitsAndBytesConfig)
 
     if "gptq" in model_name_or_path.lower():
         model = AutoModelForCausalLM.from_pretrained(
@@ -167,20 +164,33 @@ def create_text_generation_pipeline(model, tokenizer):
     return text_generation_pipeline
 
 
-# FIXME no good for chinese docs
-def load_and_process_document(file_path):
+def load_and_process_document(
+    file_path, directory_path=None, use_unstructure=True, from_scratch=False
+):
     """
     Loads and processes a document, returning a list of document chunks.
     """
-    from langchain_community.document_loaders import PyPDFLoader
     from langchain.text_splitter import RecursiveCharacterTextSplitter
+    from langchain_community.document_loaders import (PyPDFLoader,
+                                                      UnstructuredFileLoader)
 
-    if language == "en":
+    if use_unstructure:
+        if from_scratch:
+            # TODO load zh pdfs using nlp_utils .unstructrue and .zh_sentence_split
+            from nlp.nlp_utils import unstructed_pdfs as utlis_unstructed
+            from nlp.nlp_utils import zh_sentence_split as utlis_split
+
+            contents, tables = utlis_unstructed.load_and_split(directory_path)
+            texts_l = [docs[0][i].text for i in range(len(contents))]
+            # FIXME not finish implementing
+            breakpoint()
+        else:
+            loader = UnstructuredFileLoader(file_path, mode="elements")
+            pages = loader.load()
+    else:
+        # FIXME no good for chinese docs
         loader = PyPDFLoader(file_path)
         pages = loader.load_and_split()
-    elif language == "zh":
-        # TODO load zh pdfs using nlp_utils .unstructrue and .zh_sentence_split
-        breakpoint()
 
     text_splitter = RecursiveCharacterTextSplitter(
         # hyper-parameters
@@ -194,7 +204,7 @@ def load_and_process_document(file_path):
 
 def embed_documents(docs, embedding_model):
     """
-    Embeds document chunks using OpenAI's embeddings.  """
+    Embeds document chunks using OpenAI's embeddings."""
     from langchain_community.vectorstores import FAISS
 
     try:
@@ -207,13 +217,13 @@ def embed_documents(docs, embedding_model):
 
     return vectordb
 
+
 def setup_retrieval_chain(text_generation_pipeline, prompt, vectordb):
     """
     Sets up the prompt template and LLM chain for text generation.
     """
-    from langchain_community.llms.huggingface_pipeline import (
-        HuggingFacePipeline,
-    )
+    from langchain_community.llms.huggingface_pipeline import \
+        HuggingFacePipeline
 
     llm = HuggingFacePipeline(
         pipeline=text_generation_pipeline,
