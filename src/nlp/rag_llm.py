@@ -185,8 +185,12 @@ def load_and_process_document(
             # FIXME not finish implementing
             breakpoint()
         else:
-            loader = UnstructuredFileLoader(file_path, mode="elements")
+            #  loader = UnstructuredFileLoader(file_path, mode="elements")
+            loader = UnstructuredFileLoader(file_path)
             pages = loader.load()
+            for page in pages:
+                page.page_content = page.page_content.replace("\n", "")
+            #  breakpoint()
     else:
         # FIXME no good for chinese docs
         loader = PyPDFLoader(file_path)
@@ -194,8 +198,8 @@ def load_and_process_document(
 
     text_splitter = RecursiveCharacterTextSplitter(
         # hyper-parameters
-        chunk_size=50,
-        chunk_overlap=10,
+        chunk_size=100,
+        chunk_overlap=20,
     )
     docs = text_splitter.split_documents(pages)
 
@@ -227,7 +231,7 @@ def setup_retrieval_chain(text_generation_pipeline, prompt, vectordb):
 
     llm = HuggingFacePipeline(
         pipeline=text_generation_pipeline,
-        pipeline_kwargs={"do_sample": True, "temperature": 0.2},
+        pipeline_kwargs={"do_sample": True, "temperature": 0.1},
     )
     llm_chain = RetrievalQA.from_chain_type(
         llm,
@@ -240,22 +244,34 @@ def setup_retrieval_chain(text_generation_pipeline, prompt, vectordb):
 
 
 if __name__ == "__main__":
+    from langchain_community.vectorstores import FAISS
     from langchain_community.embeddings import HuggingFaceEmbeddings
 
     docs = load_and_process_document("data/pdfs/zh/novel_最后一片藤叶.pdf")
-    breakpoint()
-    question = "什么样的作品才能称为画家的杰作？"
+    question = "为什么最后一片常春藤叶不会掉落？"
+    question = "贝尔曼的杰作是什么？"
 
     #  docs = load_and_process_document("data/pdfs/en/llama2.pdf")
     #  breakpoint()
     #  question = "how to train llama2 effectively?"
 
+    rebuild_vdb = True
     embedding_model_name = "models/hfLLMs/m3e-large"
     embedding_model = HuggingFaceEmbeddings(model_name=embedding_model_name)
-    vectordb = embed_documents(docs, embedding_model)
+    if not rebuild_vdb:
+        print("Load local faiss index.")
+        vectordb = FAISS.load_local(
+            "./data/vectordb/faiss_index", embedding_model
+        )
+    else:
+        print("No local faiss index. Create one now.")
+        docs = load_and_process_document(
+            "data/pdfs/zh/novel_最后一片藤叶.pdf"  # FIXME later
+        )
+        vectordb = embed_documents(docs, embedding_model)
 
     llm_chain = create_llm_chain(vectordb=vectordb)
-    result_rag = llm_chain.invoke(question)
+    result_rag = llm_chain.invoke(question)  # TODO 怎么知道它用了什么prompt？
     print("\n>>", question)
     print(result_rag["result"], "\n")
     breakpoint()
