@@ -1,3 +1,44 @@
+""" 路遥：《平凡的世界》三部曲，网络爬虫
+
+"https://www.pingfandeshijie.cn/"
+
+<body>
+    <div class=container>
+        <div class=row>
+            <div class=span12>
+
+                <p>
+                    第n章第一节的正文内容...
+                    <!-- n 为本部的某一章，整数 --> 
+                </p>
+
+                <div class=pagenation>
+                    <ul>
+                        <a title=page>
+                            <b>1</b>
+                            /
+                            <b>m</b>
+                            <!-- m 为本章最后一节，整数 --> 
+                        </a>
+
+<body>
+    <div class=container>
+        <div class=row>
+            <div class=span12>
+
+                第n章"非"第一节的正文内容...
+                <!-- n 为本部的某一章，整数 ; 注意：没有 <p></p> --> 
+                <!-- 注意2: <p></p> 标签内容是 “上一篇 x，下一篇 y”的链接 -->
+
+                <div class=pagenation>
+                    <ul>
+                        <a title=page>
+                            <b>1</b>
+                            /
+                            <b>m</b>
+                            <!-- m 为本章最后一节，整数 --> 
+                        </a>
+"""
 import requests
 from bs4 import BeautifulSoup
 
