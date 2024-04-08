@@ -75,6 +75,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from tqdm import tqdm
 
+import pandas as pd
 from typing import IO
 import sys
 import logging
@@ -142,7 +143,7 @@ async def fetch_html(url: str, session: ClientSession, **kwargs) -> str:
 
     resp = await session.request(method="GET", url=url, **kwargs)
     resp.raise_for_status()
-    logger.info("Got response [%s] for URL: %s", resp.status, url)
+    #  logger.info("Got response [%s] for URL: %s", resp.status, url)
     html = await resp.text()
     return html
 
@@ -172,10 +173,10 @@ async def parse(url: str, session: ClientSession, **kwargs) -> set:
     else:
         # TODO find the text content instead
         key = url.split("/")[-1].split(".")[0]
-        val = BeautifulSoup(html, "lxml").select_one(".span12").text
-        # type(val) -> str;
+        texts = BeautifulSoup(html, "lxml").select_one(".span12").text
+        # type(texts) -> str;
         # get rid of unrelative short texts that just useful for web browsing:
-        val = [p for p in val.split("\n") if len(p) > 100][0]
+        val = max([p for p in texts.split("\n")], key=len)
         found.update({key: val})
         return found
 
@@ -185,11 +186,11 @@ async def write_one(file: IO, url: str, **kwargs) -> None:
     res = await parse(url=url, **kwargs)
     if not res:
         return None
-    async with aiofiles.open(file, "a") as f:
+    async with aiofiles.open(file, "a") as f:  # NOTE write out using "append" mode
         # TODO sort the keys in found (dict) and merged texts
         for k, v in res.items():
-            await f.write(",".join([k, v]))  # can be saved as CSV, for further parsing
-        logger.info("Wrote results for chaps: %s", k)
+            await f.write(",".join([k, v]) + "\n")  # for further parsing
+        #  logger.info("Wrote results for chaps: %s", k)
 
 
 async def bulk_crawl_and_write(file: IO, urls: str, **kwargs) -> None:
@@ -236,10 +237,22 @@ if __name__ == "__main__":
     assert sys.version_info >= (3, 7), "Script requires Python 3.7+"
 
     try:
-        urls = joblib.load("data/pfdsj_urls_dict.pkl")["diyibu"]
+        urls_d = joblib.load("data/pfdsj_urls_dict.pkl")  # ["diyibu"]
     except FileNotFoundError:
-        urls = produce_urls()["diyibu"]
+        urls_d = produce_urls()  # ["diyibu"]
+
+    urls = []
+    for k, v in urls_d.items():
+        urls.extend(v)
 
     # 乱序写入文本，CSV格式，可以进一步用pandas进行清洗
-    outpath = "data/pfdsj_part_01_out_of_order.text"
+    outpath = "data/PingFanDeShiJie_3in1_out_of_order.csv"
     asyncio.run(bulk_crawl_and_write(file=outpath, urls=urls))
+
+    # 整理文本内容顺序：
+    columns = ["chapter", "text"]
+    data = pd.read_csv(outpath)
+    data.columns = columns
+    data["chap_num"] = data["chapter"].apply(lambda x: ".".join(x.split("_"))).astype(float)
+    result = data.sort_values("chap_num")
+    result.to_csv("data/PingFanDeShiJie_3in1_ordered.csv")
