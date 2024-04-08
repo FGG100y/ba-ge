@@ -234,6 +234,15 @@ if __name__ == "__main__":
     #  #  demo2()
     #  #  demo3()
 
+    def get_part_num(x):
+        # compare to chapter number (float)
+        if x < 55:  # part one of the book
+            return 1
+        elif x < 109:  # part two
+            return 2
+        elif x < 163:  # part three
+            return 3
+
     assert sys.version_info >= (3, 7), "Script requires Python 3.7+"
 
     try:
@@ -256,5 +265,6 @@ if __name__ == "__main__":
     data["chap_num"] = (
         data["chapter"].apply(lambda x: ".".join(x.split("_"))).astype(float)
     )
+    data["part"] = data["chap_num"].apply(get_part_num)
     result = data.sort_values("chap_num")
     result.to_csv("data/PingFanDeShiJie_3in1_ordered.csv")
