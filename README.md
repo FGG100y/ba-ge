@@ -8,13 +8,11 @@
 # 项目初衷：
 
 与其临渊羡鱼，不如退而结网。
-原谅我这一生不羁放纵爱折腾。
+
+♪ 原谅我这一生不羁放纵爱折腾。♪
 
 
-注意1：
-目前所有代码充其量就是一个“脚手架”（分支"scaffold"预计将会作为长期分支）
-
-注意2：
+注意：
 一个参考：AMD7840 (32G RAM) & RXT4050 (6G) --> 迟钝的助手，而且相当容易就OOM😂。
 
 
@@ -35,7 +33,7 @@
 
 # 怎么折腾
 
-- 🙄 从语音输入到语音转文字到大模型生成再到文字转语音 （折腾不止）
+- 🙄 从语音输入到语音转文字到大模型生成再到文字转语音
     - [x] LLM->TTS: async/await 异步处理LLM生成和TTS文字转语音 （难言流畅（机器性能不足？但愿如此 😂 ））
     - [x] coquiai-xtts 开启deepspeed=True (最好有多点GPU内存，否则不能与faster-whisper共存)
 
@@ -75,6 +73,7 @@
             - [x] Naive RAG -- 朴素检索增强个人资料问答
                 - [x] pdfs (unstructuredio 提供的工具需要更多算力 😂)
                 - [x] txts (长文本断句需要改进)
+                - [x] 增加网络爬虫模块，爬取感兴趣资料作为RAG知识库
                 - [ ] 为什么用 m3e-embedding 生成嵌入向量
             - [ ] RAG的召回排序/打分
                 - [ ] 多路召回混合排序 (Reciprocal Rank Fusion, RRF)
@@ -84,6 +83,8 @@
                 - [ ] vectordb (pgvertor)
         - [ ] LLM 智能代理
             - [ ] functional-calling -- 使用api工具访问互联网
+                - [ ] chatglm-6b-32k
+                - [ ] NexaAIDev/Octopus-v2 (据说可以在端侧运行，并支持调用安卓API)
             - [ ] multi-step-search agent -- 综合搜索智能代理
             - [ ] multi-tasks agent: 播放本地音乐
 
