@@ -93,7 +93,7 @@ logging.basicConfig(
 logger = logging.getLogger("acrawl")
 logging.getLogger("chardet.charsetprober").disabled = True
 
-headers = {
+headers = {  # F12 -> Network -> Headers -> User-Agent
     "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:124.0) Gecko/20100101 Firefox/124.0"
 }
 base_url = "https://www.pingfandeshijie.cn/"  # 首页
