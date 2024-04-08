@@ -75,6 +75,27 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from tqdm import tqdm
 
+from typing import IO
+import sys
+import logging
+import asyncio
+import aiofiles
+import aiohttp
+from aiohttp import ClientSession
+
+logging.basicConfig(
+    format="%(asctime)s %(levelname)s:%(name)s: %(message)s",
+    level=logging.DEBUG,
+    datefmt="%H:%M:%S",
+    stream=sys.stderr,
+)
+logger = logging.getLogger("acrawl")
+logging.getLogger("chardet.charsetprober").disabled = True
+
+headers = {
+    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:124.0) Gecko/20100101 Firefox/124.0"
+}
+base_url = "https://www.pingfandeshijie.cn/"  # 首页
 
 def get_pagination(url):
     result = requests.get(url, headers=headers)
@@ -84,71 +105,141 @@ def get_pagination(url):
     return tot_sections
 
 
-headers = {
-    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:124.0) Gecko/20100101 Firefox/124.0"
-}
-base_url = "https://www.pingfandeshijie.cn/"  # 首页
-
-part_urls = {}
-start = 1
-chaps = 54
-end = 1 + chaps
-for part in tqdm(["diyibu", "dierbu", "disanbu"]):
-    urls = []
-    for chap in range(start, end):
-        # NOTE urljoin(base, url):Use the "base" parameter with a trailing slash ("/"),
-        # and avoid starting the "url" parameter with a slash ("/").
-        url = urljoin(base_url, part + f"/{chap}.html")
-        urls.append(url)
-        sections = get_pagination(url)  # number, in string
-        for sec in range(2, int(sections)+1):
-            chapi = "_".join([str(chap), str(sec)])
-            url = urljoin(base_url, part + f"/{chapi}.html")
+def produce_urls():
+    """
+    """
+    part_urls = {}
+    start = 1
+    chaps = 54
+    end = 1 + chaps
+    for part in tqdm(["diyibu", "dierbu", "disanbu"]):
+        urls = []
+        for chap in range(start, end):
+            # NOTE urljoin(base, url):Use the "base" parameter with a trailing slash ("/"),
+            # and avoid starting the "url" parameter with a slash ("/").
+            url = urljoin(base_url, part + f"/{chap}.html")
             urls.append(url)
-        part_urls.update({part: urls})
-        #  print(part_urls)
-        #  breakpoint()
-        #  break
-    start += chaps
-    end += chaps
-joblib.dump(part_urls, "data/pfdsj_urls_dict.pkl")
-breakpoint()
+            sections = get_pagination(url)  # number, in string
+            for sec in range(2, int(sections)+1):
+                chapi = "_".join([str(chap), str(sec)])
+                url = urljoin(base_url, part + f"/{chapi}.html")
+                urls.append(url)
+            part_urls.update({part: urls})
+            #  print(part_urls)
+            #  breakpoint()
+            #  break
+        start += chaps
+        end += chaps
+    joblib.dump(part_urls, "data/pfdsj_urls_dict.pkl")
+    return part_urls
+
+
+async def fetch_html(url: str, session: ClientSession, **kwargs) -> str:
+    """Get request wrapper to fetch page HTML.
+
+    kwargs are passed to `session.request()`.
+    """
+
+    resp = await session.request(method="GET", url=url, **kwargs)
+    resp.raise_for_status()
+    logger.info("Got response [%s] for URL: %s", resp.status, url)
+    html = await resp.text()
+    return html
+
+
+async def parse(url: str, session: ClientSession, **kwargs) -> set:
+    """Find target texts in the HTML of `url`
+    """
+    found = {}  # {章节编号: 内容}
+    try:
+        html = await fetch_html(url=url, session=session, **kwargs)
+    except (
+        aiohttp.ClientError,
+        aiohttp.http_exceptions.HttpProcessingError,
+    ) as e:
+        logger.error(
+            "aiohttp exception for %s [%s]: %s",
+            url,
+            getattr(e, "status", None),
+            getattr(e, "message", None),
+        )
+        return found
+    except Exception as e:
+        logger.exception(
+            "Non-aiohttp exception occured: %s", getattr(e, "__dict__", {})
+        )
+        return found
+    else:
+        # TODO find the text content instead
+        key = url.split("/")[-1].split(".")[0]
+        val = BeautifulSoup(html, "lxml").select_one(".span12").text
+        # type(val) -> str;
+        # get rid of unrelative short texts that just useful for web browsing:
+        val = [p for p in val.split("\n") if len(p) > 100][0]
+        found.update({key: val})
+        return found
+
+
+async def write_one(file: IO, url: str, **kwargs) -> None:
+    """Write the found texts of `url` to file"""
+    res = await parse(url=url, **kwargs)
+    if not res:
+        return None
+    async with aiofiles.open(file, "a") as f:
+        # TODO sort the keys in found (dict) and merged texts
+        for k, v in res.items():
+            await f.write(",".join([k, v]))  # can be saved as CSV, for further parsing
+        logger.info("Wrote results for chaps: %s", k)
+
+
+async def bulk_crawl_and_write(file: IO, urls: str, **kwargs) -> None:
+    """Crawl and write concurrently to `file` for multiple `urls`."""
+    async with ClientSession() as session:
+        tasks = []
+        for url in urls:
+            tasks.append(
+                write_one(file=file, url=url, session=session, **kwargs)
+            )
+        await asyncio.gather(*(tasks))
 
         
 if __name__ == "__main__":
-    # 三部曲, 每部共有 54 章,
-    #  1, 1_2，1_3 分别为第一章的第一、第二、第三小节; 下同
-    first_part = base_url + "diyibu/"   # 共有 54 章, 序号 1 -> 54
-    second_part = base_url + "dierbu/"  # 共有 54 章, 序号 55 -> 108
-    third_part = base_url + "disanbu/"  # 共有 54 章, 序号 109 -> 162
 
-    def demo1():
-        part1_chap1 = requests.get(first_part + "1.html", headers=headers)
+    #  # 三部曲, 每部共有 54 章,
+    #  #  1, 1_2，1_3 分别为第一章的第一、第二、第三小节; 下同
+    #  first_part = base_url + "diyibu/"   # 共有 54 章, 序号 1 -> 54
+    #  second_part = base_url + "dierbu/"  # 共有 54 章, 序号 55 -> 108
+    #  third_part = base_url + "disanbu/"  # 共有 54 章, 序号 109 -> 162
+    #
+    #  def demo1():
+    #      part1_chap1 = requests.get(first_part + "1.html", headers=headers)
+    #      # Create a BeautifulSoup object
+    #      soup = BeautifulSoup(part1_chap1.text, "html.parser")
+    #      print(soup.select_one(".span12 p:nth-of-type(1)").text)
+    #
+    #  def demo2():
+    #      part1_chap1_2 = requests.get(first_part + "1_2.html", headers=headers)
+    #      # Create a BeautifulSoup object
+    #      soup = BeautifulSoup(part1_chap1_2.text, "html.parser")
+    #      print(soup.select_one(".span12").text)  # works; 2024-04-07 Sun
+    #
+    #  def demo3():
+    #      part1_chap1 = requests.get(first_part + "1.html", headers=headers)
+    #      # Create a BeautifulSoup object
+    #      soup = BeautifulSoup(part1_chap1.text, "html.parser")
+    #      print(soup.select_one(".pagination b:nth-of-type(2)").text)
+    #
+    #  #  demo1()
+    #  #  demo2()
+    #  #  demo3()
 
-        # Create a BeautifulSoup object
-        soup = BeautifulSoup(part1_chap1.text, "html.parser")
+    assert sys.version_info >= (3, 7), "Script requires Python 3.7+"
 
-        print(soup.select_one(".span12 p:nth-of-type(1)").text)  # works; 2024-04-07 Sun
+    try:
+        urls = joblib.load("data/pfdsj_urls_dict.pkl")["diyibu"]
+    except FileNotFoundError:
+        urls = produce_urls()["diyibu"]
 
-
-    def demo2():
-        part1_chap1_2 = requests.get(first_part + "1_2.html", headers=headers)
-
-        # Create a BeautifulSoup object
-        soup = BeautifulSoup(part1_chap1_2.text, "html.parser")
-
-        print(soup.select_one(".span12").text)  # works; 2024-04-07 Sun
-
-
-    def demo3():
-        part1_chap1 = requests.get(first_part + "1.html", headers=headers)
-
-        # Create a BeautifulSoup object
-        soup = BeautifulSoup(part1_chap1.text, "html.parser")
-
-        print(soup.select_one(".pagination b:nth-of-type(2)").text)  # works; 2024-04-07 Sun
-
-
-    #  demo1()
-    #  demo2()
-    #  demo3()
+    # 乱序写入文本，CSV格式，可以进一步用pandas进行清洗
+    outpath = "data/pfdsj_part_01_out_of_order.text"
+    asyncio.run(bulk_crawl_and_write(file=outpath, urls=urls))
