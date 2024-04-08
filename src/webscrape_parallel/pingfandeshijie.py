@@ -98,6 +98,7 @@ headers = {  # F12 -> Network -> Headers -> User-Agent
 }
 base_url = "https://www.pingfandeshijie.cn/"  # 首页
 
+
 def get_pagination(url):
     result = requests.get(url, headers=headers)
     #  soup = BeautifulSoup(result.text, "html.parser")
@@ -107,8 +108,7 @@ def get_pagination(url):
 
 
 def produce_urls():
-    """
-    """
+    """Get URLs of PingFanDeShiJie trilogy"""
     part_urls = {}
     start = 1
     chaps = 54
@@ -116,12 +116,13 @@ def produce_urls():
     for part in tqdm(["diyibu", "dierbu", "disanbu"]):
         urls = []
         for chap in range(start, end):
-            # NOTE urljoin(base, url):Use the "base" parameter with a trailing slash ("/"),
+            # NOTE urljoin(base, url):
+            # Use the "base" parameter with a trailing slash ("/"),
             # and avoid starting the "url" parameter with a slash ("/").
             url = urljoin(base_url, part + f"/{chap}.html")
             urls.append(url)
             sections = get_pagination(url)  # number, in string
-            for sec in range(2, int(sections)+1):
+            for sec in range(2, int(sections) + 1):
                 chapi = "_".join([str(chap), str(sec)])
                 url = urljoin(base_url, part + f"/{chapi}.html")
                 urls.append(url)
@@ -149,8 +150,7 @@ async def fetch_html(url: str, session: ClientSession, **kwargs) -> str:
 
 
 async def parse(url: str, session: ClientSession, **kwargs) -> set:
-    """Find target texts in the HTML of `url`
-    """
+    """Find target texts in the HTML of `url`"""
     found = {}  # {章节编号: 内容}
     try:
         html = await fetch_html(url=url, session=session, **kwargs)
@@ -171,7 +171,6 @@ async def parse(url: str, session: ClientSession, **kwargs) -> set:
         )
         return found
     else:
-        # TODO find the text content instead
         key = url.split("/")[-1].split(".")[0]
         texts = BeautifulSoup(html, "lxml").select_one(".span12").text
         # type(texts) -> str;
@@ -186,8 +185,9 @@ async def write_one(file: IO, url: str, **kwargs) -> None:
     res = await parse(url=url, **kwargs)
     if not res:
         return None
-    async with aiofiles.open(file, "a") as f:  # NOTE write out using "append" mode
-        # TODO sort the keys in found (dict) and merged texts
+    async with aiofiles.open(
+        file, "a"
+    ) as f:  # NOTE write out using "append" mode
         for k, v in res.items():
             await f.write(",".join([k, v]) + "\n")  # for further parsing
         #  logger.info("Wrote results for chaps: %s", k)
@@ -203,7 +203,7 @@ async def bulk_crawl_and_write(file: IO, urls: str, **kwargs) -> None:
             )
         await asyncio.gather(*(tasks))
 
-        
+
 if __name__ == "__main__":
 
     #  # 三部曲, 每部共有 54 章,
@@ -253,6 +253,8 @@ if __name__ == "__main__":
     columns = ["chapter", "text"]
     data = pd.read_csv(outpath)
     data.columns = columns
-    data["chap_num"] = data["chapter"].apply(lambda x: ".".join(x.split("_"))).astype(float)
+    data["chap_num"] = (
+        data["chapter"].apply(lambda x: ".".join(x.split("_"))).astype(float)
+    )
     result = data.sort_values("chap_num")
     result.to_csv("data/PingFanDeShiJie_3in1_ordered.csv")
